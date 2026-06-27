@@ -12,6 +12,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # GLFW
 add_subdirectory(dependencies/glfw)
 
+# GLM
+add_subdirectory(dependencies/glm)
+
 # GLAD
 add_library(glad
     dependencies/glad/src/gl.c
@@ -36,10 +39,12 @@ add_executable(Windingcraft
     src/main.cpp
     src/core/Config.cpp
     src/core/Config.h
+    src/models/Cube.cpp
 )
 
 target_link_libraries(Windingcraft PRIVATE
     glfw
     glad
     json
+    glm::glm
 )
