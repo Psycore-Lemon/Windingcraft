@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "physics/AABB.h"
@@ -29,7 +30,13 @@ class World
 public:
     World(int seed = 1337, int loadRadius = 8);
 
+    void SetSaveDir(const std::string& dir);
+
     void Update(const glm::vec3& playerPosition);
+    void SaveAll();
+
+    BlockType GetBlock(const glm::vec3& worldPos) const;
+    bool SetBlock(const glm::vec3& worldPos, BlockType type);
 
     std::vector<AABB> GetNearbyAABBs(const glm::vec3& position, float radius) const;
 
@@ -37,11 +44,13 @@ public:
 
 private:
     void LoadChunk(int chunkX, int chunkZ);
+    std::string ChunkFilePath(int chunkX, int chunkZ) const;
 
     glm::ivec2 WorldToChunk(const glm::vec3& position) const;
 
     TerrainGenerator generator;
     int loadRadius;
+    std::string saveDir;
 
     std::unordered_map<glm::ivec2, ChunkData, ChunkKeyHash> chunks;
 };

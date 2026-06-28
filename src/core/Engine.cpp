@@ -2,7 +2,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <cmath>
 
+#include "game/BlockType.h"
 #include "graphics/Shader.h"
 #include "graphics/Mesh.h"
 #include "graphics/Renderer.h"
@@ -34,6 +36,7 @@ bool Engine::Init(const std::string& path)
 
     input = std::make_unique<InputHandler>(window.GetHandle());
     shader = std::make_unique<Shader>("shaders/vertex-shader.glsl", "shaders/fragment-shader.glsl");
+    lineShader = std::make_unique<Shader>("shaders/line-vertex.glsl", "shaders/line-fragment.glsl");
     renderer = std::make_unique<Renderer>(window.GetHandle());
 
     ui = std::make_unique<UIManager>();
@@ -78,7 +81,14 @@ void Engine::ProcessInput(float dt)
     escWasDown = escDown;
 
     if (state == State::Playing)
+    {
         player.ProcessInput(*input, camera, dt);
+
+        bool breakDown = input->IsMouseButtonDown(0);
+        if (breakDown && !breakWasDown && hasTarget)
+            world->SetBlock(glm::vec3(lookingAtBlockPos), BlockType::Air);
+        breakWasDown = breakDown;
+    }
 }
 
 void Engine::SetState(State newState)
@@ -96,8 +106,12 @@ void Engine::SetState(State newState)
 void Engine::StartWorld(const SaveData& data)
 {
     currentSave = data;
-    player.position = data.playerPosition;
+    player = Player(data.playerPosition);
     world = std::make_unique<World>(data.seed);
+
+    std::string worldDir = SaveManager::SaveDir() + "/" + data.name;
+    world->SetSaveDir(worldDir);
+
     world->Update(player.position);
 }
 
@@ -105,6 +119,7 @@ void Engine::SaveWorld()
 {
     currentSave.playerPosition = player.position;
     SaveManager::Save(currentSave.name, currentSave);
+    world->SaveAll();
 }
 
 void Engine::Update(float dt)
@@ -112,9 +127,42 @@ void Engine::Update(float dt)
     if (state != State::Playing)
         return;
 
+    float clampedDt = (dt > 0.05f) ? 0.05f : dt;
+
     world->Update(player.position);
-    player.Update(dt, *world);
+    player.Update(clampedDt, *world);
     player.UpdateCamera(camera);
+    UpdateLookTarget();
+}
+
+void Engine::UpdateLookTarget()
+{
+    hasTarget = false;
+    lookingAtBlock = BlockType::Air;
+
+    if (!world)
+        return;
+
+    glm::vec3 pos = camera.position;
+    glm::vec3 dir = camera.GetFront();
+
+    for (float t = 0.0f; t < 6.0f; t += 0.05f)
+    {
+        glm::vec3 point = pos + dir * t;
+        BlockType type = world->GetBlock(point);
+
+        if (Blocks::IsSolid(type))
+        {
+            hasTarget = true;
+            lookingAtBlock = type;
+            lookingAtBlockPos = glm::ivec3(
+                (int)std::floor(point.x),
+                (int)std::floor(point.y),
+                (int)std::floor(point.z)
+            );
+            return;
+        }
+    }
 }
 
 void Engine::Render()
@@ -131,6 +179,9 @@ void Engine::Render()
             if (data.mesh)
                 renderer->Draw(*data.mesh, *shader, camera, identity, aspectRatio);
         }
+
+        if (hasTarget)
+            renderer->DrawBlockHighlight(*lineShader, camera, lookingAtBlockPos, aspectRatio);
     }
 
     bool interactive = (state != State::Playing);
@@ -152,7 +203,8 @@ void Engine::Render()
     }
     else if (state == State::Paused)
     {
-        hud->RenderOverlay(player.position, player.IsGrounded(), (int)world->GetChunks().size());
+        hud->RenderOverlay(player.position, player.IsGrounded(), (int)world->GetChunks().size(),
+                           hasTarget ? Blocks::Get(lookingAtBlock).name : "---");
 
         auto action = pauseMenu->Render(window, config, configPath);
 
@@ -166,7 +218,8 @@ void Engine::Render()
     }
     else
     {
-        hud->RenderOverlay(player.position, player.IsGrounded(), (int)world->GetChunks().size());
+        hud->RenderOverlay(player.position, player.IsGrounded(), (int)world->GetChunks().size(),
+                           hasTarget ? Blocks::Get(lookingAtBlock).name : "---");
         hud->RenderCrosshair();
     }
 

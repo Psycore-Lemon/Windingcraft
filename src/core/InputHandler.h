@@ -14,6 +14,9 @@ enum class Action
 
     Jump,
 
+    BreakBlock,
+    PlaceBlock,
+
     Pause
 };
 

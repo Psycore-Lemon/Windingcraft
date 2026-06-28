@@ -2,7 +2,8 @@
 
 #include <imgui.h>
 
-void HUD::RenderOverlay(const glm::vec3& playerPos, bool grounded, int chunkCount)
+void HUD::RenderOverlay(const glm::vec3& playerPos, bool grounded, int chunkCount,
+                        const char* lookingAt)
 {
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.5f);
@@ -19,6 +20,8 @@ void HUD::RenderOverlay(const glm::vec3& playerPos, bool grounded, int chunkCoun
         ImGui::Text("Pos: %.1f, %.1f, %.1f", playerPos.x, playerPos.y, playerPos.z);
         ImGui::Text("Grounded: %s", grounded ? "Yes" : "No");
         ImGui::Text("Chunks: %d", chunkCount);
+        ImGui::Separator();
+        ImGui::Text("Looking at: %s", lookingAt);
     }
     ImGui::End();
 }

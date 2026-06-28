@@ -27,9 +27,15 @@ void TerrainGenerator::Generate(Chunk& chunk) const
             float n = noise.GetNoise(worldX, worldZ);
 
             int height = baseHeight + (int)(n * heightRange);
+            int dirtDepth = 3;
 
             for (int y = 0; y <= height; ++y)
-                chunk.SetBlock(x, y, z, true);
+            {
+                if (y < height - dirtDepth)
+                    chunk.SetBlock(x, y, z, BlockType::Stone);
+                else
+                    chunk.SetBlock(x, y, z, BlockType::Dirt);
+            }
         }
     }
 }

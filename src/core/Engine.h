@@ -8,6 +8,7 @@
 #include "core/InputHandler.h"
 #include "core/Config.h"
 
+#include "game/BlockType.h"
 #include "game/SaveData.h"
 
 #include "scene/Camera.h"
@@ -59,6 +60,7 @@ private:
     Time time;
     std::unique_ptr<InputHandler> input;
     std::unique_ptr<Shader> shader;
+    std::unique_ptr<Shader> lineShader;
     std::unique_ptr<Renderer> renderer;
     std::unique_ptr<UIManager> ui;
     std::unique_ptr<HUD> hud;
@@ -66,4 +68,10 @@ private:
     std::unique_ptr<PauseMenu> pauseMenu;
 
     bool escWasDown = false;
+    bool breakWasDown = false;
+
+    BlockType lookingAtBlock = BlockType::Air;
+    glm::ivec3 lookingAtBlockPos = glm::ivec3(0);
+    bool hasTarget = false;
+    void UpdateLookTarget();
 };

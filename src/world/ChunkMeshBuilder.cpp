@@ -6,22 +6,22 @@
 struct FaceData
 {
     float vertices[4][5]; // 4 verts, each: x y z u v
-    int normal[3];        // direction to check neighbor
+    int normal[3];
 };
 
 static const FaceData faces[6] = {
     // +X (right)
-    {{ {0.5f,-0.5f,-0.5f, 0,0}, {0.5f,0.5f,-0.5f, 1,0}, {0.5f,0.5f,0.5f, 1,1}, {0.5f,-0.5f,0.5f, 0,1} }, {1,0,0}},
+    {{ {1,0,0, 0,0}, {1,1,0, 1,0}, {1,1,1, 1,1}, {1,0,1, 0,1} }, {1,0,0}},
     // -X (left)
-    {{ {-0.5f,-0.5f,0.5f, 0,0}, {-0.5f,0.5f,0.5f, 1,0}, {-0.5f,0.5f,-0.5f, 1,1}, {-0.5f,-0.5f,-0.5f, 0,1} }, {-1,0,0}},
+    {{ {0,0,1, 0,0}, {0,1,1, 1,0}, {0,1,0, 1,1}, {0,0,0, 0,1} }, {-1,0,0}},
     // +Y (top)
-    {{ {-0.5f,0.5f,-0.5f, 0,0}, {0.5f,0.5f,-0.5f, 1,0}, {0.5f,0.5f,0.5f, 1,1}, {-0.5f,0.5f,0.5f, 0,1} }, {0,1,0}},
+    {{ {0,1,0, 0,0}, {1,1,0, 1,0}, {1,1,1, 1,1}, {0,1,1, 0,1} }, {0,1,0}},
     // -Y (bottom)
-    {{ {-0.5f,-0.5f,0.5f, 0,0}, {0.5f,-0.5f,0.5f, 1,0}, {0.5f,-0.5f,-0.5f, 1,1}, {-0.5f,-0.5f,-0.5f, 0,1} }, {0,-1,0}},
+    {{ {0,0,1, 0,0}, {1,0,1, 1,0}, {1,0,0, 1,1}, {0,0,0, 0,1} }, {0,-1,0}},
     // +Z (front)
-    {{ {-0.5f,-0.5f,0.5f, 0,0}, {0.5f,-0.5f,0.5f, 1,0}, {0.5f,0.5f,0.5f, 1,1}, {-0.5f,0.5f,0.5f, 0,1} }, {0,0,1}},
+    {{ {0,0,1, 0,0}, {1,0,1, 1,0}, {1,1,1, 1,1}, {0,1,1, 0,1} }, {0,0,1}},
     // -Z (back)
-    {{ {0.5f,-0.5f,-0.5f, 0,0}, {-0.5f,-0.5f,-0.5f, 1,0}, {-0.5f,0.5f,-0.5f, 1,1}, {0.5f,0.5f,-0.5f, 0,1} }, {0,0,-1}},
+    {{ {1,0,0, 0,0}, {0,0,0, 1,0}, {0,1,0, 1,1}, {1,1,0, 0,1} }, {0,0,-1}},
 };
 
 Mesh ChunkMeshBuilder::Build(const Chunk& chunk)
@@ -37,9 +37,11 @@ Mesh ChunkMeshBuilder::Build(const Chunk& chunk)
         {
             for (int z = 0; z < Chunk::SIZE; ++z)
             {
-                if (!chunk.GetBlock(x, y, z))
+                BlockType type = chunk.GetBlock(x, y, z);
+                if (!Blocks::IsSolid(type))
                     continue;
 
+                const BlockDef& def = Blocks::Get(type);
                 glm::vec3 worldPos = chunk.BlockWorldPosition(x, y, z);
 
                 for (int f = 0; f < 6; ++f)
@@ -49,7 +51,7 @@ Mesh ChunkMeshBuilder::Build(const Chunk& chunk)
                     int ny = y + face.normal[1];
                     int nz = z + face.normal[2];
 
-                    if (chunk.GetBlock(nx, ny, nz))
+                    if (chunk.IsSolid(nx, ny, nz))
                         continue;
 
                     for (int v = 0; v < 4; ++v)
@@ -59,6 +61,9 @@ Mesh ChunkMeshBuilder::Build(const Chunk& chunk)
                         vertices.push_back(face.vertices[v][2] + worldPos.z);
                         vertices.push_back(face.vertices[v][3]);
                         vertices.push_back(face.vertices[v][4]);
+                        vertices.push_back(def.r);
+                        vertices.push_back(def.g);
+                        vertices.push_back(def.b);
                     }
 
                     indices.push_back(indexOffset + 0);
@@ -76,8 +81,8 @@ Mesh ChunkMeshBuilder::Build(const Chunk& chunk)
 
     if (indices.empty())
     {
-        return Mesh({0,0,0,0,0}, {0,0,0}, 5);
+        return Mesh({0,0,0,0,0,0,0,0}, {0,0,0}, 8);
     }
 
-    return Mesh(vertices, indices, 5);
+    return Mesh(vertices, indices, 8);
 }

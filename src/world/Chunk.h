@@ -4,6 +4,7 @@
 #include <array>
 #include <vector>
 
+#include "game/BlockType.h"
 #include "physics/AABB.h"
 
 class Chunk
@@ -14,12 +15,13 @@ public:
 
     Chunk(int chunkX, int chunkZ);
 
-    void SetBlock(int localX, int y, int localZ, bool solid);
-    bool GetBlock(int localX, int y, int localZ) const;
+    void SetBlock(int localX, int y, int localZ, BlockType type);
+    BlockType GetBlock(int localX, int y, int localZ) const;
+
+    bool IsSolid(int localX, int y, int localZ) const;
 
     glm::vec3 BlockWorldPosition(int localX, int y, int localZ) const;
 
-    std::vector<glm::vec3> GetAllBlocks() const;
     std::vector<AABB> GetNearbyAABBs(const glm::vec3& position, float radius) const;
 
     int GetChunkX() const { return chunkX; }
@@ -29,7 +31,7 @@ private:
     int chunkX;
     int chunkZ;
 
-    std::array<bool, SIZE * MAX_HEIGHT * SIZE> blocks = {};
+    std::array<BlockType, SIZE * MAX_HEIGHT * SIZE> blocks = {};
 
     int Index(int x, int y, int z) const;
     bool InBounds(int x, int y, int z) const;

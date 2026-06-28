@@ -63,6 +63,7 @@ set(CORE_SOURCES
 )
 
 set(GAME_SOURCES
+    src/game/BlockType.h
     src/game/SaveData.cpp
     src/game/SaveData.h
 )
@@ -107,6 +108,8 @@ set(WORLD_SOURCES
     src/world/Chunk.h
     src/world/ChunkMeshBuilder.cpp
     src/world/ChunkMeshBuilder.h
+    src/world/ChunkSerializer.cpp
+    src/world/ChunkSerializer.h
     src/world/TerrainGenerator.cpp
     src/world/TerrainGenerator.h
     src/world/World.cpp

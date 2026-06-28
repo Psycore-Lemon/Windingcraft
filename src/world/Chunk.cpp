@@ -5,17 +5,22 @@ Chunk::Chunk(int chunkX, int chunkZ)
 {
 }
 
-void Chunk::SetBlock(int localX, int y, int localZ, bool solid)
+void Chunk::SetBlock(int localX, int y, int localZ, BlockType type)
 {
     if (InBounds(localX, y, localZ))
-        blocks[Index(localX, y, localZ)] = solid;
+        blocks[Index(localX, y, localZ)] = type;
 }
 
-bool Chunk::GetBlock(int localX, int y, int localZ) const
+BlockType Chunk::GetBlock(int localX, int y, int localZ) const
 {
     if (!InBounds(localX, y, localZ))
-        return false;
+        return BlockType::Air;
     return blocks[Index(localX, y, localZ)];
+}
+
+bool Chunk::IsSolid(int localX, int y, int localZ) const
+{
+    return Blocks::IsSolid(GetBlock(localX, y, localZ));
 }
 
 glm::vec3 Chunk::BlockWorldPosition(int localX, int y, int localZ) const
@@ -27,23 +32,9 @@ glm::vec3 Chunk::BlockWorldPosition(int localX, int y, int localZ) const
     );
 }
 
-std::vector<glm::vec3> Chunk::GetAllBlocks() const
-{
-    std::vector<glm::vec3> result;
-
-    for (int x = 0; x < SIZE; ++x)
-        for (int y = 0; y < MAX_HEIGHT; ++y)
-            for (int z = 0; z < SIZE; ++z)
-                if (blocks[Index(x, y, z)])
-                    result.push_back(BlockWorldPosition(x, y, z));
-
-    return result;
-}
-
 std::vector<AABB> Chunk::GetNearbyAABBs(const glm::vec3& position, float radius) const
 {
     std::vector<AABB> result;
-    glm::vec3 half(0.5f);
 
     int worldOffsetX = chunkX * SIZE;
     int worldOffsetZ = chunkZ * SIZE;
@@ -58,8 +49,11 @@ std::vector<AABB> Chunk::GetNearbyAABBs(const glm::vec3& position, float radius)
     for (int x = minX; x <= maxX; ++x)
         for (int y = minY; y <= maxY; ++y)
             for (int z = minZ; z <= maxZ; ++z)
-                if (blocks[Index(x, y, z)])
-                    result.push_back(AABB::FromCenter(BlockWorldPosition(x, y, z), half));
+                if (IsSolid(x, y, z))
+                {
+                    glm::vec3 pos = BlockWorldPosition(x, y, z);
+                    result.push_back({ pos, pos + glm::vec3(1.0f) });
+                }
 
     return result;
 }

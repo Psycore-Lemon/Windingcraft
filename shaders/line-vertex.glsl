@@ -1,11 +1,6 @@
 #version 330 core
 
 layout (location = 0) in vec3 aPosition;
-layout (location = 1) in vec2 aEdgeCoord;
-layout (location = 2) in vec3 aColor;
-
-out vec2 EdgeCoord;
-out vec3 BlockColor;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -13,7 +8,5 @@ uniform mat4 projection;
 
 void main()
 {
-    EdgeCoord = aEdgeCoord;
-    BlockColor = aColor;
     gl_Position = projection * view * model * vec4(aPosition, 1.0);
 }
