@@ -8,7 +8,7 @@ Camera::Camera()
       movementSpeed(5.0f),
       fov(45.0f),
       nearPlane(0.1f),
-      farPlane(100.0f)
+      farPlane(1000.0f)
 {
 }
 

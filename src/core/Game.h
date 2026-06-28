@@ -9,7 +9,7 @@
 
 #include "scene/Camera.h"
 #include "scene/Player.h"
-#include "scene/World.h"
+#include "world/World.h"
 
 class Shader;
 class Mesh;
@@ -41,6 +41,5 @@ private:
     Time time;
     std::unique_ptr<InputHandler> input;
     std::unique_ptr<Shader> shader;
-    std::unique_ptr<Mesh> cubeMesh;
     std::unique_ptr<Renderer> renderer;
 };

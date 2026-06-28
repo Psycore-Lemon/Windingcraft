@@ -1,6 +1,6 @@
 #include "scene/Player.h"
 #include "scene/Camera.h"
-#include "scene/World.h"
+#include "world/World.h"
 #include "core/InputHandler.h"
 
 Player::Player(const glm::vec3& spawnPosition)
@@ -38,9 +38,15 @@ void Player::Update(float dt, const World& world)
 {
     velocity.y -= gravity * dt;
 
-    position += velocity * dt;
+    // Resolve each axis independently to prevent clipping
+    position.y += velocity.y * dt;
+    ResolveCollisions(world, 1);
 
-    ResolveCollisions(world);
+    position.x += velocity.x * dt;
+    ResolveCollisions(world, 0);
+
+    position.z += velocity.z * dt;
+    ResolveCollisions(world, 2);
 }
 
 void Player::UpdateCamera(Camera& camera) const
@@ -59,9 +65,10 @@ AABB Player::GetBoundingBox() const
     return AABB::FromCenter(center, halfExtents);
 }
 
-void Player::ResolveCollisions(const World& world)
+void Player::ResolveCollisions(const World& world, int axis)
 {
-    grounded = false;
+    if (axis == 1)
+        grounded = false;
 
     auto nearby = world.GetNearbyAABBs(position, 3.0f);
 
@@ -72,17 +79,20 @@ void Player::ResolveCollisions(const World& world)
         if (!playerBox.Overlaps(blockAABB))
             continue;
 
-        glm::vec3 push = playerBox.GetPenetration(blockAABB);
+        glm::vec3 push = playerBox.GetPenetrationAxis(blockAABB, axis);
         position += push;
 
-        if (push.y > 0.0f)
+        if (axis == 1)
         {
-            velocity.y = 0.0f;
-            grounded = true;
-        }
-        else if (push.y < 0.0f)
-        {
-            velocity.y = 0.0f;
+            if (push.y > 0.0f)
+            {
+                velocity.y = 0.0f;
+                grounded = true;
+            }
+            else if (push.y < 0.0f)
+            {
+                velocity.y = 0.0f;
+            }
         }
     }
 }

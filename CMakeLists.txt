@@ -65,8 +65,17 @@ set(SCENE_SOURCES
     src/scene/Camera.h
     src/scene/Player.cpp
     src/scene/Player.h
-    src/scene/World.cpp
-    src/scene/World.h
+)
+
+set(WORLD_SOURCES
+    src/world/Chunk.cpp
+    src/world/Chunk.h
+    src/world/ChunkMeshBuilder.cpp
+    src/world/ChunkMeshBuilder.h
+    src/world/TerrainGenerator.cpp
+    src/world/TerrainGenerator.h
+    src/world/World.cpp
+    src/world/World.h
 )
 
 # -------------------------
@@ -79,6 +88,7 @@ add_executable(Windingcraft
     ${GRAPHICS_SOURCES}
     ${PHYSICS_SOURCES}
     ${SCENE_SOURCES}
+    ${WORLD_SOURCES}
 )
 
 # -------------------------
@@ -87,6 +97,7 @@ add_executable(Windingcraft
 
 target_include_directories(Windingcraft PRIVATE
     src
+    dependencies/fastnoiselite
 )
 
 # -------------------------

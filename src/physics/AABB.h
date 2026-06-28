@@ -45,4 +45,15 @@ struct AABB
             return { 0.0f, overlapY, 0.0f };
         return { 0.0f, 0.0f, overlapZ };
     }
+
+    glm::vec3 GetPenetrationAxis(const AABB& other, int axis) const
+    {
+        float d1 = other.max[axis] - min[axis];
+        float d2 = max[axis] - other.min[axis];
+        float overlap = (d1 < d2) ? d1 : -d2;
+
+        glm::vec3 result(0.0f);
+        result[axis] = overlap;
+        return result;
+    }
 };

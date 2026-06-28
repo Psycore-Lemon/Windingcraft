@@ -7,11 +7,10 @@
 
 #include "graphics/Shader.h"
 #include "graphics/Mesh.h"
-#include "graphics/PrimitiveMeshes.h"
 #include "graphics/Renderer.h"
 
 Game::Game()
-    : player(glm::vec3(0.0f, 2.0f, 0.0f))
+    : player(glm::vec3(0.0f, 20.0f, 0.0f))
 {
 }
 
@@ -33,12 +32,9 @@ bool Game::Init(const std::string& configPath)
 
     input = std::make_unique<InputHandler>(window.GetHandle());
     shader = std::make_unique<Shader>("shaders/vertex-shader.glsl", "shaders/fragment-shader.glsl");
-    cubeMesh = std::make_unique<Mesh>(PrimitiveMeshes::CreateCube());
     renderer = std::make_unique<Renderer>(window.GetHandle());
 
-    for (int x = -2; x <= 2; ++x)
-        for (int z = -2; z <= 2; ++z)
-            world.AddBlock(glm::vec3(x, 0, z));
+    world.Update(player.position);
 
     return true;
 }
@@ -68,6 +64,7 @@ void Game::ProcessInput(float dt)
 
 void Game::Update(float dt)
 {
+    world.Update(player.position);
     player.Update(dt, world);
     player.UpdateCamera(camera);
 }
@@ -78,10 +75,12 @@ void Game::Render()
 
     float aspectRatio = window.GetAspectRatio();
 
-    for (const auto& block : world.GetBlocks())
+    glm::mat4 identity(1.0f);
+
+    for (const auto& [key, data] : world.GetChunks())
     {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), block);
-        renderer->Draw(*cubeMesh, *shader, camera, model, aspectRatio);
+        if (data.mesh)
+            renderer->Draw(*data.mesh, *shader, camera, identity, aspectRatio);
     }
 
     renderer->EndFrame();

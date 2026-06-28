@@ -24,7 +24,7 @@ public:
 
 private:
     AABB GetBoundingBox() const;
-    void ResolveCollisions(const World& world);
+    void ResolveCollisions(const World& world, int axis);
 
     glm::vec3 velocity = glm::vec3(0.0f);
 
