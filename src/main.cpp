@@ -10,6 +10,7 @@
 #include "core/Config.h"
 #include "core/Camera.h"
 #include "core/Shader.h"
+
 // Models
 #include "models/Cube.h"
 
@@ -20,8 +21,6 @@ Camera camera({0.0f, 0.0f, 3.0f});
 float lastX = 0.0f, lastY = 0.0f;
 bool  firstMouse = true;
 
-// Wires your Camera::processMouse to GLFW. Delete this + the setCursorPosCallback
-// line below if you don't want mouse-look yet.
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     if (firstMouse) { lastX = (float)xpos; lastY = (float)ypos; firstMouse = false; }
     float dx = (float)xpos - lastX;
@@ -92,9 +91,15 @@ int main()
         shader.use();
         shader.setMat4("projection", camera.projection((float)w / h));
         shader.setMat4("view", camera.view());
-        shader.setMat4("model", glm::mat4(1.0f));   // identity
 
-        cube.draw();
+        for (int x = -1; x <= 1; ++x) {
+            for (int z = -1; z <= 1; ++z) {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f),
+                    glm::vec3(x * 2.0f, 0.0f, z * 2.0f));
+                shader.setMat4("model", model);
+                cube.draw();
+            }
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

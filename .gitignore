@@ -25,3 +25,6 @@ x86/
 *.pdb
 *.obj
 *.lib
+
+# Agentic files
+CLAUDE.md
