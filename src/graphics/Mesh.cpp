@@ -33,11 +33,22 @@ Mesh::Mesh(const std::vector<float>& vertices,
         3,
         GL_FLOAT,
         GL_FALSE,
-        3 * sizeof(float),
+        5 * sizeof(float),
         (void*)0
     );
 
     glEnableVertexAttribArray(0);
+
+    // location 1 = vec2 texCoords
+    glVertexAttribPointer(
+        1,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+        5 * sizeof(float),
+        (void*)(3 * sizeof(float))
+    );
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 }

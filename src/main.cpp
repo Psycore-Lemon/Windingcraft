@@ -17,6 +17,7 @@
 #include "graphics/Mesh.h"
 #include "graphics/PrimitiveMeshes.h"
 #include "graphics/Renderer.h"
+#include "graphics/Texture.h"
 
 #include "scene/Camera.h"
 
@@ -80,6 +81,11 @@ int main()
     // Game Loop
     // -------------------------
 
+    Texture grass("assets/textures/dirt.png");
+
+    shader.Use();
+    shader.SetInt("mainTexture", 0);
+
     while (!glfwWindowShouldClose(window))
     {
         
@@ -110,15 +116,29 @@ int main()
             glfwSetWindowShouldClose(window, true);
         }
 
-        float aspectRatio = 1280.0f / 720.0f;
+        int width;
+        int height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        glViewport(0, 0, width, height);
+
+        float aspectRatio = static_cast<float>(width) / static_cast<float>(height);
 
         renderer.BeginFrame();
 
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 model2 = glm::mat4(2.0f);
 
-        renderer.Draw(cube, shader, camera, model, aspectRatio);
-        renderer.Draw(cube, shader, camera, model2, aspectRatio);
+        Transform cubeA;
+        cubeA.position = glm::vec3(0.0f, 0.0f, 0.0f);
+
+        Transform cubeB;
+        cubeB.position = glm::vec3(2.0f, 0.0f, 0.0f);
+
+        shader.Use();
+
+        grass.Bind(0);
+
+        renderer.Draw(cube, shader, camera, cubeA, aspectRatio);
+        renderer.Draw(cube, shader, camera, cubeB, aspectRatio);
 
         renderer.EndFrame();
         

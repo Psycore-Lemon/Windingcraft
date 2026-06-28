@@ -18,12 +18,12 @@ void Renderer::Draw(
     const Mesh& mesh,
     const Shader& shader,
     const Camera& camera,
-    const glm::mat4& model,
+    const Transform& transform,
     float aspectRatio)
 {
     shader.Use();
 
-    shader.SetMat4("model", model);
+    shader.SetMat4("model", transform.GetModelMatrix());
     shader.SetMat4("view", camera.GetViewMatrix());
     shader.SetMat4("projection", camera.GetProjectionMatrix(aspectRatio));
 

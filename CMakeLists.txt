@@ -52,11 +52,16 @@ set(GRAPHICS_SOURCES
     src/graphics/PrimitiveMeshes.h
     src/graphics/Renderer.cpp
     src/graphics/Renderer.h
+    src/graphics/Renderer.cpp
+    src/graphics/Renderer.h
+    src/graphics/Texture.cpp
+    src/graphics/Texture.h
 )
 
 set(SCENE_SOURCES
     src/scene/Camera.cpp
     src/scene/Camera.h
+    src/scene/Transform.h
 )
 
 # -------------------------
@@ -77,6 +82,7 @@ add_executable(Windingcraft
 
 target_include_directories(Windingcraft PRIVATE
     src
+    dependencies/stb
 )
 
 # -------------------------

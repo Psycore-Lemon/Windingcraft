@@ -1,4 +1,12 @@
+#version 330 core
 
-void main() {
-  gl_FragColor = vec4(vec3(1.0, 0.0, 0.0), 1.0);
+out vec4 FragColor;
+
+in vec2 vTexCoord;
+
+uniform sampler2D mainTexture;
+
+void main()
+{
+    FragColor = texture(mainTexture, vTexCoord);
 }
