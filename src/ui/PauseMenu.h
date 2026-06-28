@@ -8,7 +8,7 @@ struct Config;
 class PauseMenu
 {
 public:
-    enum class Action { None, Resume, Quit };
+    enum class Action { None, Resume, QuitToMenu, QuitToDesktop };
 
     Action Render(Window& window, Config& config, const std::string& configPath);
     void Reset();

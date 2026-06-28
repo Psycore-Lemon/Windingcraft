@@ -40,8 +40,13 @@ PauseMenu::Action PauseMenu::Render(Window& window, Config& config, const std::s
 
             ImGui::Spacing();
 
-            if (ImGui::Button("Quit", ButtonSize))
-                action = Action::Quit;
+            if (ImGui::Button("Quit to Menu", ButtonSize))
+                action = Action::QuitToMenu;
+
+            ImGui::Spacing();
+
+            if (ImGui::Button("Quit to Desktop", ButtonSize))
+                action = Action::QuitToDesktop;
         }
         ImGui::End();
     }

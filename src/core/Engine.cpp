@@ -210,10 +210,15 @@ void Engine::Render()
 
         if (action == PauseMenu::Action::Resume)
             SetState(State::Playing);
-        else if (action == PauseMenu::Action::Quit)
+        else if (action == PauseMenu::Action::QuitToMenu)
         {
             SaveWorld();
             SetState(State::Menu);
+        }
+        else if (action == PauseMenu::Action::QuitToDesktop)
+        {
+            SaveWorld();
+            window.Close();
         }
     }
     else
