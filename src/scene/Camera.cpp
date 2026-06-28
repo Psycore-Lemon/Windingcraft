@@ -1,4 +1,5 @@
 #include "scene/Camera.h"
+#include <GLFW/glfw3.h>
 
 Camera::Camera()
     : position(0.0f, 0.0f, 3.0f),
@@ -9,6 +10,31 @@ Camera::Camera()
       nearPlane(0.1f),
       farPlane(100.0f)
 {
+}
+
+void Camera::AttachToWindow(GLFWwindow* window)
+{
+    glfwSetWindowUserPointer(window, this);
+    glfwSetCursorPosCallback(window, MouseCallback);
+}
+
+void Camera::MouseCallback(GLFWwindow* window, double xpos, double ypos)
+{
+    auto* cam = static_cast<Camera*>(glfwGetWindowUserPointer(window));
+
+    if (cam->firstMouse)
+    {
+        cam->lastMouseX = (float)xpos;
+        cam->lastMouseY = (float)ypos;
+        cam->firstMouse = false;
+    }
+
+    float dx = (float)xpos - cam->lastMouseX;
+    float dy = cam->lastMouseY - (float)ypos;
+    cam->lastMouseX = (float)xpos;
+    cam->lastMouseY = (float)ypos;
+
+    cam->ProcessMouseMovement(dx, dy);
 }
 
 glm::mat4 Camera::GetViewMatrix() const
@@ -68,4 +94,9 @@ void Camera::ProcessMouseMovement(float xOffset, float yOffset)
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 
     front = glm::normalize(direction);
+}
+
+glm::vec3 Camera::GetFront() const
+{
+    return front;
 }

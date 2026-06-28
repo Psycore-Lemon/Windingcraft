@@ -19,21 +19,10 @@
 #include "graphics/Renderer.h"
 
 #include "scene/Camera.h"
+#include "scene/Player.h"
+#include "scene/World.h"
 
 const std::string CONFIG_FILEPATH = "config.json";
-
-Camera camera;
-float lastX = 0.0f, lastY = 0.0f;
-bool  firstMouse = true;
-
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (firstMouse) { lastX = (float)xpos; lastY = (float)ypos; firstMouse = false; }
-    float dx = (float)xpos - lastX;
-    float dy = lastY - (float)ypos;
-    lastX = (float)xpos;
-    lastY = (float)ypos;
-    camera.ProcessMouseMovement(dx, dy);
-}
 
 int main()
 {
@@ -64,13 +53,22 @@ int main()
     if (!gladLoadGL(glfwGetProcAddress))
         return -1;
 
-    glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glEnable(GL_DEPTH_TEST);
     glfwSwapInterval(1);
 
     std::cout << "Hello CRPG Prototype!\n";
+
+    World world;
+    for (int x = -1; x <= 1; ++x)
+        for (int z = -1; z <= 1; ++z)
+            world.AddBlock(glm::vec3(x, 0, z));
+
+    Camera camera;
+    camera.AttachToWindow(window);
+
+    Player player(glm::vec3(0.0f, 2.0f, 0.0f));
 
     {
         Time time;
@@ -92,34 +90,37 @@ int main()
 
             input.Update();
 
-            glm::vec2 mouseDelta = input.GetMouseDelta();
-            camera.ProcessMouseMovement(mouseDelta.x, -mouseDelta.y);
+            glm::vec3 cameraFront = camera.GetFront();
 
             if (input.IsKeyDown(GLFW_KEY_W))
-                camera.MoveForward(dt);
+                player.MoveForward(dt, cameraFront);
 
             if (input.IsKeyDown(GLFW_KEY_S))
-                camera.MoveBackward(dt);
+                player.MoveBackward(dt, cameraFront);
 
             if (input.IsKeyDown(GLFW_KEY_A))
-                camera.MoveLeft(dt);
+                player.MoveLeft(dt, cameraFront);
 
             if (input.IsKeyDown(GLFW_KEY_D))
-                camera.MoveRight(dt);
+                player.MoveRight(dt, cameraFront);
+
+            if (input.IsActionDown(Action::Jump))
+                player.Jump();
 
             if (input.IsActionDown(Action::Pause))
             {
                 glfwSetWindowShouldClose(window, true);
             }
 
+            player.Update(dt, world);
+            player.UpdateCamera(camera);
+
             renderer.BeginFrame();
 
-            for (int x = -1; x <= 1; ++x) {
-                for (int z = -1; z <= 1; ++z) {
-                    glm::mat4 model = glm::translate(glm::mat4(1.0f),
-                        glm::vec3(x * 1.0f, 0.0f, z * 1.0f));
-                    renderer.Draw(cube, shader, camera, model, aspectRatio);
-                }
+            for (const auto& block : world.GetBlocks())
+            {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), block);
+                renderer.Draw(cube, shader, camera, model, aspectRatio);
             }
 
             renderer.EndFrame();

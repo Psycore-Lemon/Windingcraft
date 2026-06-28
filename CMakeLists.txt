@@ -51,9 +51,17 @@ set(GRAPHICS_SOURCES
     src/graphics/Renderer.h
 )
 
+set(PHYSICS_SOURCES
+    src/physics/AABB.h
+)
+
 set(SCENE_SOURCES
     src/scene/Camera.cpp
     src/scene/Camera.h
+    src/scene/Player.cpp
+    src/scene/Player.h
+    src/scene/World.cpp
+    src/scene/World.h
 )
 
 # -------------------------
@@ -64,8 +72,8 @@ add_executable(Windingcraft
     src/main.cpp
     ${CORE_SOURCES}
     ${GRAPHICS_SOURCES}
+    ${PHYSICS_SOURCES}
     ${SCENE_SOURCES}
-    ${WORLD_SOURCES}
 )
 
 # -------------------------
