@@ -1,4 +1,5 @@
 #include "InputHandler.h"
+#include <GLFW/glfw3.h>
 
 InputHandler::InputHandler(GLFWwindow* window)
     : window(window)
@@ -20,6 +21,8 @@ InputHandler::InputHandler(GLFWwindow* window)
 
 void InputHandler::Update()
 {
+    glfwPollEvents();
+
     double x;
     double y;
     glfwGetCursorPos(window, &x, &y);

@@ -46,9 +46,39 @@ Mesh::Mesh(const std::vector<float>& vertices,
 
 Mesh::~Mesh()
 {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    if (VAO) glDeleteVertexArrays(1, &VAO);
+    if (VBO) glDeleteBuffers(1, &VBO);
+    if (EBO) glDeleteBuffers(1, &EBO);
+}
+
+Mesh::Mesh(Mesh&& other) noexcept
+    : VAO(other.VAO), VBO(other.VBO), EBO(other.EBO), indexCount(other.indexCount)
+{
+    other.VAO = 0;
+    other.VBO = 0;
+    other.EBO = 0;
+    other.indexCount = 0;
+}
+
+Mesh& Mesh::operator=(Mesh&& other) noexcept
+{
+    if (this != &other)
+    {
+        if (VAO) glDeleteVertexArrays(1, &VAO);
+        if (VBO) glDeleteBuffers(1, &VBO);
+        if (EBO) glDeleteBuffers(1, &EBO);
+
+        VAO = other.VAO;
+        VBO = other.VBO;
+        EBO = other.EBO;
+        indexCount = other.indexCount;
+
+        other.VAO = 0;
+        other.VBO = 0;
+        other.EBO = 0;
+        other.indexCount = 0;
+    }
+    return *this;
 }
 
 void Mesh::Draw() const

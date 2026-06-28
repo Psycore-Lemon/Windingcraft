@@ -35,9 +35,14 @@ add_subdirectory(dependencies/json)
 set(CORE_SOURCES
     src/core/Config.cpp
     src/core/Config.h
+    src/core/Game.cpp
+    src/core/Game.h
+    src/core/Time.cpp
     src/core/Time.h
     src/core/InputHandler.cpp
     src/core/InputHandler.h
+    src/core/Window.cpp
+    src/core/Window.h
 )
 
 set(GRAPHICS_SOURCES

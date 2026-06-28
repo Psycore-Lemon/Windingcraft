@@ -1,8 +1,9 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <unordered_map>
+
+struct GLFWwindow;
 
 enum class Action
 {
