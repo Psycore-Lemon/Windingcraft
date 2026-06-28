@@ -47,8 +47,8 @@ set(GRAPHICS_SOURCES
     src/graphics/Mesh.h
     src/graphics/PrimitiveMeshes.cpp
     src/graphics/PrimitiveMeshes.h
-    src/rendering/Renderer.cpp
-    src/rendering/Renderer.h
+    src/graphics/Renderer.cpp
+    src/graphics/Renderer.h
 )
 
 set(SCENE_SOURCES

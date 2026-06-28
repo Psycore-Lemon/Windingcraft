@@ -1,10 +1,11 @@
 #pragma once
 
-#include "rendering/Mesh.h"
-#include "rendering/Shader.h"
+#include "graphics/Mesh.h"
+#include "graphics/Shader.h"
 #include "scene/Camera.h"
 
 #include <glm/glm.hpp>
+#include <GLFW/glfw3.h>
 
 class Renderer
 {

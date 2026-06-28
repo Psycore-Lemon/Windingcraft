@@ -16,6 +16,7 @@
 #include "graphics/Shader.h"
 #include "graphics/Mesh.h"
 #include "graphics/PrimitiveMeshes.h"
+#include "graphics/Renderer.h"
 
 #include "scene/Camera.h"
 
@@ -78,6 +79,10 @@ int main()
 
         Mesh cube = PrimitiveMeshes::CreateCube();
 
+        Renderer renderer(window);
+
+        float aspectRatio = 1280.0f / 720.0f;
+
         while (!glfwWindowShouldClose(window))
         {
             time.Update();
@@ -107,28 +112,17 @@ int main()
                 glfwSetWindowShouldClose(window, true);
             }
 
-            glClearColor(0.1f, 0.15f, 0.2f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            float aspectRatio = 1280.0f / 720.0f;
-
-            glm::mat4 view = camera.GetViewMatrix();
-            glm::mat4 projection = camera.GetProjectionMatrix(aspectRatio);
-
-            shader.Use();
-            shader.SetMat4("view", view);
-            shader.SetMat4("projection", projection);
+            renderer.BeginFrame();
 
             for (int x = -1; x <= 1; ++x) {
                 for (int z = -1; z <= 1; ++z) {
                     glm::mat4 model = glm::translate(glm::mat4(1.0f),
                         glm::vec3(x * 1.0f, 0.0f, z * 1.0f));
-                    shader.SetMat4("model", model);
-                    cube.Draw();
+                    renderer.Draw(cube, shader, camera, model, aspectRatio);
                 }
             }
 
-            glfwSwapBuffers(window);
+            renderer.EndFrame();
         }
     }
 
