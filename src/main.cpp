@@ -16,8 +16,11 @@
 #include "graphics/Shader.h"
 #include "graphics/Mesh.h"
 #include "graphics/PrimitiveMeshes.h"
+#include "graphics/Renderer.h"
 
 #include "scene/Camera.h"
+
+
 
 const std::string CONFIG_FILEPATH = "config.json";
 
@@ -71,6 +74,8 @@ int main()
     Mesh cube = PrimitiveMeshes::CreateCube();
 
     Camera camera;
+
+    Renderer renderer(window);
     // -------------------------
     // Game Loop
     // -------------------------
@@ -105,23 +110,17 @@ int main()
             glfwSetWindowShouldClose(window, true);
         }
 
-        glClearColor(0.1f, 0.15f, 0.2f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         float aspectRatio = 1280.0f / 720.0f;
 
+        renderer.BeginFrame();
+
         glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        glm::mat4 projection = camera.GetProjectionMatrix(aspectRatio);
+        glm::mat4 model2 = glm::mat4(2.0f);
 
-        shader.Use();
-        shader.SetMat4("model", model);
-        shader.SetMat4("view", view);
-        shader.SetMat4("projection", projection);
+        renderer.Draw(cube, shader, camera, model, aspectRatio);
+        renderer.Draw(cube, shader, camera, model2, aspectRatio);
 
-        cube.Draw();
-
-        glfwSwapBuffers(window);
+        renderer.EndFrame();
         
     }
 
