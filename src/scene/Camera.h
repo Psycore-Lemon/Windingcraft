@@ -26,6 +26,9 @@ public:
 
     glm::vec3 GetFront() const;
 
+    void SetActive(bool active);
+    bool IsActive() const;
+
 private:
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
 
@@ -45,4 +48,5 @@ private:
     float lastMouseX = 0.0f;
     float lastMouseY = 0.0f;
     bool firstMouse = true;
+    bool active = true;
 };

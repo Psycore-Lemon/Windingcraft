@@ -26,5 +26,8 @@ x86/
 *.obj
 *.lib
 
+# ImGui
+imgui.ini
+
 # Agentic files
 CLAUDE.md

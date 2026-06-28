@@ -28,6 +28,23 @@ target_include_directories(glad PUBLIC
 set(NLOHMANN_JSON_TARGET_NAME json)
 add_subdirectory(dependencies/json)
 
+# ImGui
+add_library(imgui
+    dependencies/imgui-docking/imgui.cpp
+    dependencies/imgui-docking/imgui_draw.cpp
+    dependencies/imgui-docking/imgui_tables.cpp
+    dependencies/imgui-docking/imgui_widgets.cpp
+    dependencies/imgui-docking/backends/imgui_impl_glfw.cpp
+    dependencies/imgui-docking/backends/imgui_impl_opengl3.cpp
+)
+
+target_include_directories(imgui PUBLIC
+    dependencies/imgui-docking
+    dependencies/imgui-docking/backends
+)
+
+target_link_libraries(imgui PUBLIC glfw glad)
+
 # -------------------------
 # Source Files
 # -------------------------
@@ -54,6 +71,8 @@ set(GRAPHICS_SOURCES
     src/graphics/PrimitiveMeshes.h
     src/graphics/Renderer.cpp
     src/graphics/Renderer.h
+    src/graphics/HUD.cpp
+    src/graphics/HUD.h
 )
 
 set(PHYSICS_SOURCES
@@ -109,4 +128,5 @@ target_link_libraries(Windingcraft PRIVATE
     glad
     json
     glm::glm
+    imgui
 )

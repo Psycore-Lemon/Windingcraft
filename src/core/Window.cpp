@@ -68,3 +68,9 @@ float Window::GetAspectRatio() const
     if (h == 0) return 1.0f;
     return static_cast<float>(w) / static_cast<float>(h);
 }
+
+void Window::SetCursorCaptured(bool captured)
+{
+    glfwSetInputMode(handle, GLFW_CURSOR,
+        captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+}

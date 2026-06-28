@@ -22,6 +22,12 @@ void Camera::MouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
     auto* cam = static_cast<Camera*>(glfwGetWindowUserPointer(window));
 
+    if (!cam->active)
+    {
+        cam->firstMouse = true;
+        return;
+    }
+
     if (cam->firstMouse)
     {
         cam->lastMouseX = (float)xpos;
@@ -94,6 +100,16 @@ void Camera::ProcessMouseMovement(float xOffset, float yOffset)
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 
     front = glm::normalize(direction);
+}
+
+void Camera::SetActive(bool active)
+{
+    this->active = active;
+}
+
+bool Camera::IsActive() const
+{
+    return active;
 }
 
 glm::vec3 Camera::GetFront() const

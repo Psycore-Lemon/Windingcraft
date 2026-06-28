@@ -14,6 +14,7 @@
 class Shader;
 class Mesh;
 class Renderer;
+class HUD;
 
 class Game
 {
@@ -31,6 +32,7 @@ private:
     void ProcessInput(float dt);
     void Update(float dt);
     void Render();
+    void SetPaused(bool pause);
 
     Window window;
 
@@ -42,4 +44,8 @@ private:
     std::unique_ptr<InputHandler> input;
     std::unique_ptr<Shader> shader;
     std::unique_ptr<Renderer> renderer;
+    std::unique_ptr<HUD> hud;
+
+    bool paused = false;
+    bool escWasDown = false;
 };
