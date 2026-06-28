@@ -1,13 +1,13 @@
-#include "core/Game.h"
+#include "core/Engine.h"
 
 int main()
 {
-    Game game;
+    Engine engine;
 
-    if (!game.Init("config.json"))
+    if (!engine.Init("config.json"))
         return -1;
 
-    game.Run();
+    engine.Run();
 
     return 0;
 }

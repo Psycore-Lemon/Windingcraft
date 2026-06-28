@@ -28,7 +28,7 @@ Config* ReadConfig(const std::string& filepath)
 
     config->windowHeight = data["window"].value("height", config->windowHeight);
 
-    config->fullscreen = data["window"].value("title", config->fullscreen);
+    config->fullscreen = data["window"].value("fullscreen", config->fullscreen);
 
 
     return config;

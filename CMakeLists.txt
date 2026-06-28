@@ -52,14 +52,19 @@ target_link_libraries(imgui PUBLIC glfw glad)
 set(CORE_SOURCES
     src/core/Config.cpp
     src/core/Config.h
-    src/core/Game.cpp
-    src/core/Game.h
+    src/core/Engine.cpp
+    src/core/Engine.h
     src/core/Time.cpp
     src/core/Time.h
     src/core/InputHandler.cpp
     src/core/InputHandler.h
     src/core/Window.cpp
     src/core/Window.h
+)
+
+set(GAME_SOURCES
+    src/game/SaveData.cpp
+    src/game/SaveData.h
 )
 
 set(GRAPHICS_SOURCES
@@ -71,8 +76,6 @@ set(GRAPHICS_SOURCES
     src/graphics/PrimitiveMeshes.h
     src/graphics/Renderer.cpp
     src/graphics/Renderer.h
-    src/graphics/HUD.cpp
-    src/graphics/HUD.h
 )
 
 set(PHYSICS_SOURCES
@@ -84,6 +87,19 @@ set(SCENE_SOURCES
     src/scene/Camera.h
     src/scene/Player.cpp
     src/scene/Player.h
+)
+
+set(UI_SOURCES
+    src/ui/UIManager.cpp
+    src/ui/UIManager.h
+    src/ui/HUD.cpp
+    src/ui/HUD.h
+    src/ui/MainMenu.cpp
+    src/ui/MainMenu.h
+    src/ui/PauseMenu.cpp
+    src/ui/PauseMenu.h
+    src/ui/VideoSettings.cpp
+    src/ui/VideoSettings.h
 )
 
 set(WORLD_SOURCES
@@ -104,10 +120,12 @@ set(WORLD_SOURCES
 add_executable(Windingcraft
     src/main.cpp
     ${CORE_SOURCES}
+    ${GAME_SOURCES}
     ${GRAPHICS_SOURCES}
     ${PHYSICS_SOURCES}
     ${SCENE_SOURCES}
     ${WORLD_SOURCES}
+    ${UI_SOURCES}
 )
 
 # -------------------------

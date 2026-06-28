@@ -13,7 +13,7 @@ Window::~Window()
     glfwTerminate();
 }
 
-bool Window::Init(int width, int height, const std::string& title)
+bool Window::Init(int width, int height, const std::string& title, bool fullscreen)
 {
     if (!glfwInit())
         return false;
@@ -22,12 +22,32 @@ bool Window::Init(int width, int height, const std::string& title)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    handle = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+    windowedWidth = width;
+    windowedHeight = height;
+
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+    if (fullscreen)
+    {
+        handle = glfwCreateWindow(mode->width, mode->height, title.c_str(), monitor, nullptr);
+    }
+    else
+    {
+        handle = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+    }
 
     if (!handle)
     {
         glfwTerminate();
         return false;
+    }
+
+    if (!fullscreen)
+    {
+        int x = (mode->width - width) / 2;
+        int y = (mode->height - height) / 2;
+        glfwSetWindowPos(handle, x, y);
     }
 
     glfwMakeContextCurrent(handle);
@@ -73,4 +93,43 @@ void Window::SetCursorCaptured(bool captured)
 {
     glfwSetInputMode(handle, GLFW_CURSOR,
         captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+}
+
+void Window::SetSize(int width, int height)
+{
+    if (IsFullscreen())
+        return;
+
+    windowedWidth = width;
+    windowedHeight = height;
+
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    int x = (mode->width - width) / 2;
+    int y = (mode->height - height) / 2;
+
+    glfwSetWindowSize(handle, width, height);
+    glfwSetWindowPos(handle, x, y);
+}
+
+void Window::SetFullscreen(bool fullscreen)
+{
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+    if (fullscreen)
+    {
+        glfwSetWindowMonitor(handle, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+    }
+    else
+    {
+        int x = (mode->width - windowedWidth) / 2;
+        int y = (mode->height - windowedHeight) / 2;
+        glfwSetWindowMonitor(handle, nullptr, x, y, windowedWidth, windowedHeight, 0);
+    }
+}
+
+bool Window::IsFullscreen() const
+{
+    return glfwGetWindowMonitor(handle) != nullptr;
 }

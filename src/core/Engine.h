@@ -6,6 +6,9 @@
 #include "core/Window.h"
 #include "core/Time.h"
 #include "core/InputHandler.h"
+#include "core/Config.h"
+
+#include "game/SaveData.h"
 
 #include "scene/Camera.h"
 #include "scene/Player.h"
@@ -14,38 +17,53 @@
 class Shader;
 class Mesh;
 class Renderer;
-class HUD;
 
-class Game
+class UIManager;
+class HUD;
+class MainMenu;
+class PauseMenu;
+
+class Engine
 {
 public:
-    Game();
-    ~Game();
+    Engine();
+    ~Engine();
 
-    Game(const Game&) = delete;
-    Game& operator=(const Game&) = delete;
+    Engine(const Engine&) = delete;
+    Engine& operator=(const Engine&) = delete;
 
     bool Init(const std::string& configPath);
     void Run();
 
 private:
+    enum class State { Menu, Playing, Paused };
+
     void ProcessInput(float dt);
     void Update(float dt);
     void Render();
-    void SetPaused(bool pause);
+    void SetState(State newState);
+
+    State state = State::Menu;
 
     Window window;
+    Config config;
+    std::string configPath;
 
     Camera camera;
     Player player;
-    World world;
+    std::unique_ptr<World> world;
+    SaveData currentSave;
+    void StartWorld(const SaveData& data);
+    void SaveWorld();
 
     Time time;
     std::unique_ptr<InputHandler> input;
     std::unique_ptr<Shader> shader;
     std::unique_ptr<Renderer> renderer;
+    std::unique_ptr<UIManager> ui;
     std::unique_ptr<HUD> hud;
+    std::unique_ptr<MainMenu> mainMenu;
+    std::unique_ptr<PauseMenu> pauseMenu;
 
-    bool paused = false;
     bool escWasDown = false;
 };

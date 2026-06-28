@@ -26,6 +26,9 @@ x86/
 *.obj
 *.lib
 
+# Saves
+saves/
+
 # ImGui
 imgui.ini
 
