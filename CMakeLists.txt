@@ -21,6 +21,9 @@ target_include_directories(glad PUBLIC
     dependencies/glad/include
 )
 
+# GLM
+add_subdirectory(dependencies/glm)
+
 # JSON
 
 set(NLOHMANN_JSON_TARGET_NAME json)
@@ -29,17 +32,60 @@ add_subdirectory(dependencies/json)
 
 
 # -------------------------
+# Source Files
+# -------------------------
+
+set(CORE_SOURCES
+    src/core/Config.cpp
+    src/core/Config.h
+    src/core/Time.h
+    src/core/InputHandler.cpp
+    src/core/InputHandler.h
+)
+
+set(GRAPHICS_SOURCES
+    src/graphics/Shader.cpp
+    src/graphics/Shader.h
+    src/graphics/Mesh.cpp
+    src/graphics/Mesh.h
+    src/graphics/PrimitiveMeshes.cpp
+    src/graphics/PrimitiveMeshes.h
+    src/rendering/Renderer.cpp
+    src/rendering/Renderer.h
+)
+
+set(SCENE_SOURCES
+    src/scene/Camera.cpp
+    src/scene/Camera.h
+)
+
+# -------------------------
 # Executable
 # -------------------------
 
 add_executable(Windingcraft
     src/main.cpp
-    src/core/Config.cpp
-    src/core/Config.h
+    ${CORE_SOURCES}
+    ${GRAPHICS_SOURCES}
+    ${SCENE_SOURCES}
+    ${WORLD_SOURCES}
 )
+
+# -------------------------
+# Include Directories
+# -------------------------
+
+target_include_directories(Windingcraft PRIVATE
+    src
+)
+
+# -------------------------
+# Link Libraries
+# -------------------------
 
 target_link_libraries(Windingcraft PRIVATE
     glfw
     glad
     json
+    glm::glm
 )

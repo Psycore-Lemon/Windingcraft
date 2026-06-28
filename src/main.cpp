@@ -1,12 +1,23 @@
 #include <iostream>
-#include <GLAD/gl.h>
-#include <GLFW/glfw3.h>
+#include <glad/gl.h>
+#include <glfw/glfw3.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <string>
 
 #include <nlohmann/json.hpp>
 
 #include "core/Config.h"
+#include "core/Time.h"
+#include "core/InputHandler.h"
+
+#include "graphics/Shader.h"
+#include "graphics/Mesh.h"
+#include "graphics/PrimitiveMeshes.h"
+
+#include "scene/Camera.h"
 
 const std::string CONFIG_FILEPATH = "config.json";
 
@@ -33,6 +44,8 @@ int main()
         nullptr
     );
 
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     if (!window)
     {
         glfwTerminate();
@@ -46,21 +59,70 @@ int main()
         return -1;
     }
 
+    glEnable(GL_DEPTH_TEST);
+    glfwSwapInterval(1);
+
     std::cout << "Hello CRPG Prototype!\n";
+
+    Time time;
+    InputHandler input(window);
+    Shader shader("shaders/vertex-shader.glsl", "shaders/fragment-shader.glsl");
+
+    Mesh cube = PrimitiveMeshes::CreateCube();
+
+    Camera camera;
+    // -------------------------
+    // Game Loop
+    // -------------------------
 
     while (!glfwWindowShouldClose(window))
     {
-        glClearColor(
-            0.1f,
-            0.1f,
-            0.2f,
-            1.0f
-        );
+        
+        time.Update();
+        float dt = static_cast<float>(time.DeltaTime());
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glfwPollEvents();
+
+        input.Update();
+
+        glm::vec2 mouseDelta = input.GetMouseDelta();
+        camera.ProcessMouseMovement(mouseDelta.x, -mouseDelta.y);
+
+        if (input.IsKeyDown(GLFW_KEY_W))
+            camera.MoveForward(dt);
+
+        if (input.IsKeyDown(GLFW_KEY_S))
+            camera.MoveBackward(dt);
+
+        if (input.IsKeyDown(GLFW_KEY_A))
+            camera.MoveLeft(dt);
+
+        if (input.IsKeyDown(GLFW_KEY_D))
+            camera.MoveRight(dt);
+
+        if (input.IsActionDown(Action::Pause))
+        {
+            glfwSetWindowShouldClose(window, true);
+        }
+
+        glClearColor(0.1f, 0.15f, 0.2f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        float aspectRatio = 1280.0f / 720.0f;
+
+        glm::mat4 model = glm::mat4(1.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 projection = camera.GetProjectionMatrix(aspectRatio);
+
+        shader.Use();
+        shader.SetMat4("model", model);
+        shader.SetMat4("view", view);
+        shader.SetMat4("projection", projection);
+
+        cube.Draw();
 
         glfwSwapBuffers(window);
-        glfwPollEvents();
+        
     }
 
     glfwDestroyWindow(window);
