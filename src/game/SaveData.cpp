@@ -52,6 +52,13 @@ bool SaveManager::Load(const std::string& saveName, SaveData& data)
     return true;
 }
 
+void SaveManager::Delete(const std::string& saveName)
+{
+    fs::path dir = fs::path(SaveDir()) / saveName;
+    if (fs::exists(dir))
+        fs::remove_all(dir);
+}
+
 std::vector<std::string> SaveManager::ListSaves()
 {
     std::vector<std::string> saves;

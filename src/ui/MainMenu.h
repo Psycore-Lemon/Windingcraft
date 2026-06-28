@@ -17,7 +17,7 @@ public:
     const SaveData& GetWorldData() const;
 
 private:
-    enum class Page { Main, NewWorld, LoadWorld, Options };
+    enum class Page { Main, Singleplayer, NewWorld, Options };
     Page currentPage = Page::Main;
 
     char nameInput[64] = "My World";
@@ -25,4 +25,7 @@ private:
     SaveData worldData;
 
     std::vector<std::string> saveList;
+    std::string pendingDelete;
+
+    void RefreshSaveList();
 };

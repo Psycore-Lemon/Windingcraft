@@ -16,6 +16,7 @@ class SaveManager
 public:
     static void Save(const std::string& saveName, const SaveData& data);
     static bool Load(const std::string& saveName, SaveData& data);
+    static void Delete(const std::string& saveName);
     static std::vector<std::string> ListSaves();
     static std::string SaveDir();
 };
