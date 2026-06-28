@@ -39,6 +39,10 @@ bool Window::Init(int width, int height, const std::string& title)
     glfwSetInputMode(handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSwapInterval(1);
 
+    glfwSetFramebufferSizeCallback(handle, [](GLFWwindow*, int w, int h) {
+        glViewport(0, 0, w, h);
+    });
+
     return true;
 }
 
@@ -55,4 +59,12 @@ void Window::Close()
 GLFWwindow* Window::GetHandle() const
 {
     return handle;
+}
+
+float Window::GetAspectRatio() const
+{
+    int w, h;
+    glfwGetFramebufferSize(handle, &w, &h);
+    if (h == 0) return 1.0f;
+    return static_cast<float>(w) / static_cast<float>(h);
 }

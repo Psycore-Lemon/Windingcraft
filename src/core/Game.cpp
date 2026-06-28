@@ -36,8 +36,8 @@ bool Game::Init(const std::string& configPath)
     cubeMesh = std::make_unique<Mesh>(PrimitiveMeshes::CreateCube());
     renderer = std::make_unique<Renderer>(window.GetHandle());
 
-    for (int x = -1; x <= 1; ++x)
-        for (int z = -1; z <= 1; ++z)
+    for (int x = -2; x <= 2; ++x)
+        for (int z = -2; z <= 2; ++z)
             world.AddBlock(glm::vec3(x, 0, z));
 
     return true;
@@ -60,22 +60,7 @@ void Game::ProcessInput(float dt)
 {
     input->Update();
 
-    glm::vec3 cameraFront = camera.GetFront();
-
-    if (input->IsActionDown(Action::MoveForward))
-        player.MoveForward(dt, cameraFront);
-
-    if (input->IsActionDown(Action::MoveBackward))
-        player.MoveBackward(dt, cameraFront);
-
-    if (input->IsActionDown(Action::MoveLeft))
-        player.MoveLeft(dt, cameraFront);
-
-    if (input->IsActionDown(Action::MoveRight))
-        player.MoveRight(dt, cameraFront);
-
-    if (input->IsActionDown(Action::Jump))
-        player.Jump();
+    player.ProcessInput(*input, camera, dt);
 
     if (input->IsActionDown(Action::Pause))
         window.Close();
@@ -90,6 +75,8 @@ void Game::Update(float dt)
 void Game::Render()
 {
     renderer->BeginFrame();
+
+    float aspectRatio = window.GetAspectRatio();
 
     for (const auto& block : world.GetBlocks())
     {

@@ -18,6 +18,7 @@ public:
     void Close();
 
     GLFWwindow* GetHandle() const;
+    float GetAspectRatio() const;
 
 private:
     GLFWwindow* handle = nullptr;

@@ -1,45 +1,33 @@
 #include "scene/Player.h"
 #include "scene/Camera.h"
 #include "scene/World.h"
+#include "core/InputHandler.h"
 
 Player::Player(const glm::vec3& spawnPosition)
     : position(spawnPosition)
 {
 }
 
-void Player::MoveForward(float dt, const glm::vec3& cameraFront)
+void Player::ProcessInput(const InputHandler& input, const Camera& camera, float dt)
 {
-    glm::vec3 forward = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
-    velocity.x += forward.x * moveSpeed;
-    velocity.z += forward.z * moveSpeed;
-}
-
-void Player::MoveBackward(float dt, const glm::vec3& cameraFront)
-{
-    glm::vec3 forward = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
-    velocity.x -= forward.x * moveSpeed;
-    velocity.z -= forward.z * moveSpeed;
-}
-
-void Player::MoveLeft(float dt, const glm::vec3& cameraFront)
-{
-    glm::vec3 forward = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
+    glm::vec3 front = camera.GetFront();
+    glm::vec3 forward = glm::normalize(glm::vec3(front.x, 0.0f, front.z));
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-    velocity.x -= right.x * moveSpeed;
-    velocity.z -= right.z * moveSpeed;
-}
 
-void Player::MoveRight(float dt, const glm::vec3& cameraFront)
-{
-    glm::vec3 forward = glm::normalize(glm::vec3(cameraFront.x, 0.0f, cameraFront.z));
-    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-    velocity.x += right.x * moveSpeed;
-    velocity.z += right.z * moveSpeed;
-}
+    glm::vec3 move(0.0f);
 
-void Player::Jump()
-{
-    if (grounded)
+    if (input.IsActionDown(Action::MoveForward))  move += forward;
+    if (input.IsActionDown(Action::MoveBackward)) move -= forward;
+    if (input.IsActionDown(Action::MoveLeft))     move -= right;
+    if (input.IsActionDown(Action::MoveRight))    move += right;
+
+    if (glm::length(move) > 0.0f)
+        move = glm::normalize(move);
+
+    velocity.x = move.x * moveSpeed;
+    velocity.z = move.z * moveSpeed;
+
+    if (input.IsActionDown(Action::Jump) && grounded)
     {
         velocity.y = jumpForce;
         grounded = false;
@@ -53,10 +41,6 @@ void Player::Update(float dt, const World& world)
     position += velocity * dt;
 
     ResolveCollisions(world);
-
-    // Damp horizontal velocity each frame so movement is input-driven
-    velocity.x = 0.0f;
-    velocity.z = 0.0f;
 }
 
 void Player::UpdateCamera(Camera& camera) const
@@ -91,13 +75,11 @@ void Player::ResolveCollisions(const World& world)
         glm::vec3 push = playerBox.GetPenetration(blockAABB);
         position += push;
 
-        // Landed on top of a block
         if (push.y > 0.0f)
         {
             velocity.y = 0.0f;
             grounded = true;
         }
-        // Hit ceiling
         else if (push.y < 0.0f)
         {
             velocity.y = 0.0f;

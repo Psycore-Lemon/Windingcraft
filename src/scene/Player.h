@@ -5,6 +5,7 @@
 #include "physics/AABB.h"
 
 class Camera;
+class InputHandler;
 class World;
 
 class Player
@@ -12,11 +13,7 @@ class Player
 public:
     Player(const glm::vec3& spawnPosition);
 
-    void MoveForward(float dt, const glm::vec3& cameraFront);
-    void MoveBackward(float dt, const glm::vec3& cameraFront);
-    void MoveLeft(float dt, const glm::vec3& cameraFront);
-    void MoveRight(float dt, const glm::vec3& cameraFront);
-    void Jump();
+    void ProcessInput(const InputHandler& input, const Camera& camera, float dt);
 
     void Update(float dt, const World& world);
     void UpdateCamera(Camera& camera) const;

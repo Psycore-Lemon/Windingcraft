@@ -43,6 +43,4 @@ private:
     std::unique_ptr<Shader> shader;
     std::unique_ptr<Mesh> cubeMesh;
     std::unique_ptr<Renderer> renderer;
-
-    float aspectRatio = 1280.0f / 720.0f;
 };
