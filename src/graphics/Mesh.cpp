@@ -1,7 +1,8 @@
 #include "graphics/Mesh.h"
 
 Mesh::Mesh(const std::vector<float>& vertices,
-           const std::vector<unsigned int>& indices)
+           const std::vector<unsigned int>& indices,
+           unsigned int floatsPerVertex)
 {
     indexCount = static_cast<unsigned int>(indices.size());
 
@@ -27,17 +28,18 @@ Mesh::Mesh(const std::vector<float>& vertices,
         GL_STATIC_DRAW
     );
 
-    // location 0 = vec3 position
-    glVertexAttribPointer(
-        0,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-        3 * sizeof(float),
-        (void*)0
-    );
+    unsigned int stride = floatsPerVertex * sizeof(float);
 
+    // location 0 = vec3 position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
+
+    // location 1 = vec2 edge coordinate (if present)
+    if (floatsPerVertex >= 5)
+    {
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+    }
 
     glBindVertexArray(0);
 }

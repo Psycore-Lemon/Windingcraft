@@ -1,6 +1,6 @@
 #include <iostream>
 #include <glad/gl.h>
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -22,7 +22,7 @@
 
 const std::string CONFIG_FILEPATH = "config.json";
 
-Camera camera({0.0f, 0.0f, 3.0f});
+Camera camera;
 float lastX = 0.0f, lastY = 0.0f;
 bool  firstMouse = true;
 

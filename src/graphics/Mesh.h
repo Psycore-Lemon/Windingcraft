@@ -7,7 +7,8 @@ class Mesh
 {
 public:
     Mesh(const std::vector<float>& vertices,
-         const std::vector<unsigned int>& indices);
+         const std::vector<unsigned int>& indices,
+         unsigned int floatsPerVertex = 3);
 
     ~Mesh();
 
