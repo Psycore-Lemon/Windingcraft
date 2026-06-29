@@ -1,8 +1,12 @@
 #include "server/HostedServer.h"
 #include "scene/Player.h"
+#include "world/World.h"
+#include "world/Chunk.h"
+#include "world/ChunkSerializer.h"
 #include "game/GameConfig.h"
 
 #include <cstdio>
+#include <cmath>
 
 HostedServer::HostedServer() = default;
 HostedServer::~HostedServer() { Stop(); }
@@ -48,6 +52,7 @@ void HostedServer::Tick(float dt)
     netServer.Poll();
     gameServer.Tick(dt);
     BroadcastSnapshots();
+    StreamChunks();
 }
 
 GameServer& HostedServer::GetGameServer()
@@ -58,6 +63,44 @@ GameServer& HostedServer::GetGameServer()
 const GameServer& HostedServer::GetGameServer() const
 {
     return gameServer;
+}
+
+void HostedServer::StreamChunks()
+{
+    const World& world = gameServer.GetWorld();
+    const auto& allChunks = world.GetChunks();
+    int radius = GameConfig::ChunkLoadRadius;
+
+    for (auto& [playerId, username] : playerUsernames)
+    {
+        auto peerIt = playerToPeer.find(playerId);
+        if (peerIt == playerToPeer.end()) continue;
+        int peerId = peerIt->second;
+
+        const Player& player = gameServer.GetPlayer(playerId);
+        int cx = (int)std::floor(player.position.x / (float)GameConfig::ChunkSize);
+        int cz = (int)std::floor(player.position.z / (float)GameConfig::ChunkSize);
+
+        auto& sent = sentChunks[peerId];
+
+        for (int dx = -radius; dx <= radius; ++dx)
+        {
+            for (int dz = -radius; dz <= radius; ++dz)
+            {
+                glm::ivec2 key(cx + dx, cz + dz);
+                if (sent.count(key)) continue;
+
+                auto chunkIt = allChunks.find(key);
+                if (chunkIt == allChunks.end()) continue;
+
+                std::vector<uint8_t> data = ChunkSerializer::Serialize(*chunkIt->second);
+                ByteBuffer buf = PacketSerializer::WriteChunkData(key, data);
+                netServer.SendTo(peerId, buf, true);
+
+                sent.insert(key);
+            }
+        }
+    }
 }
 
 void HostedServer::OnPeerConnect(int peerId, const std::string& username)
@@ -96,6 +139,7 @@ void HostedServer::OnPeerDisconnect(int peerId)
     peerToPlayer.erase(peerId);
     playerToPeer.erase(playerId);
     playerUsernames.erase(playerId);
+    sentChunks.erase(peerId);
 
     ByteBuffer left;
     left.WriteU8(static_cast<uint8_t>(Net::PacketType::ServerPlayerLeft));

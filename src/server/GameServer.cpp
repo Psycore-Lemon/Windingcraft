@@ -52,6 +52,7 @@ void GameServer::Tick(float dt)
 
 Player& GameServer::GetPlayer(int id) { return *players.at(id); }
 const Player& GameServer::GetPlayer(int id) const { return *players.at(id); }
+const std::unordered_map<int, std::unique_ptr<Player>>& GameServer::GetPlayers() const { return players; }
 
 World& GameServer::GetWorld() { return *world; }
 const World& GameServer::GetWorld() const { return *world; }

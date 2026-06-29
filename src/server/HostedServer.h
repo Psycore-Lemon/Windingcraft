@@ -2,11 +2,13 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 
 #include "server/GameServer.h"
 #include "net/NetServer.h"
 #include "net/PacketSerializer.h"
+#include "world/ChunkKey.h"
 
 class HostedServer
 {
@@ -31,6 +33,7 @@ private:
     void OnPeerData(int peerId, const uint8_t* data, size_t size);
 
     void BroadcastSnapshots();
+    void StreamChunks();
 
     GameServer gameServer;
     NetServer netServer;
@@ -38,6 +41,7 @@ private:
     std::unordered_map<int, int> peerToPlayer;
     std::unordered_map<int, int> playerToPeer;
     std::unordered_map<int, std::string> playerUsernames;
+    std::unordered_map<int, std::unordered_set<glm::ivec2, ChunkKeyHash>> sentChunks;
 
     int seed = 0;
 };

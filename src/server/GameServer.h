@@ -27,6 +27,7 @@ public:
 
     Player& GetPlayer(int id);
     const Player& GetPlayer(int id) const;
+    const std::unordered_map<int, std::unique_ptr<Player>>& GetPlayers() const;
 
     World& GetWorld();
     const World& GetWorld() const;

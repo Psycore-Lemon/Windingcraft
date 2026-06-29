@@ -29,6 +29,12 @@ struct BlockChange
     BlockType type = BlockType::Air;
 };
 
+struct ChunkPacket
+{
+    glm::ivec2 key{0};
+    std::vector<uint8_t> data;
+};
+
 namespace PacketSerializer
 {
     // PlayerCommand
@@ -46,4 +52,8 @@ namespace PacketSerializer
     // Block change
     ByteBuffer WriteBlockChange(const glm::ivec3& pos, BlockType type);
     BlockChange ReadBlockChange(ByteBuffer& buf);
+
+    // Chunk data
+    ByteBuffer WriteChunkData(const glm::ivec2& key, const std::vector<uint8_t>& chunkData);
+    ChunkPacket ReadChunkData(ByteBuffer& buf);
 }

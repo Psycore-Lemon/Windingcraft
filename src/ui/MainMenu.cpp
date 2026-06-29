@@ -51,6 +51,11 @@ MainMenu::Action MainMenu::Render(Window& window, Config& config, const std::str
 
         ImGui::Spacing();
 
+        if (CenteredButton("Multiplayer", ButtonSize))
+            currentPage = Page::Multiplayer;
+
+        ImGui::Spacing();
+
         if (CenteredButton("Options", ButtonSize))
             currentPage = Page::Options;
 
@@ -221,6 +226,51 @@ MainMenu::Action MainMenu::Render(Window& window, Config& config, const std::str
 
         ImGui::End();
     }
+    else if (currentPage == Page::Multiplayer)
+    {
+        BeginCenteredWindow("Multiplayer", ImVec2(350, 320));
+
+        ImGui::Spacing();
+        CenteredText("DIRECT CONNECT");
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::Text("Username:");
+        ImGui::SetNextItemWidth(-1);
+        ImGui::InputText("##username", usernameInput, sizeof(usernameInput));
+
+        ImGui::Spacing();
+
+        ImGui::Text("Server Address:");
+        ImGui::SetNextItemWidth(-1);
+        ImGui::InputText("##host", hostInput, sizeof(hostInput));
+
+        ImGui::Spacing();
+
+        ImGui::Text("Port:");
+        ImGui::SetNextItemWidth(-1);
+        ImGui::InputText("##port", portInput, sizeof(portInput));
+
+        ImGui::Spacing();
+        ImGui::Spacing();
+
+        if (CenteredButton("Connect", ButtonSize))
+        {
+            connectionInfo.host = hostInput;
+            connectionInfo.port = static_cast<uint16_t>(std::atoi(portInput));
+            connectionInfo.username = usernameInput;
+            action = Action::Connect;
+            currentPage = Page::Main;
+        }
+
+        ImGui::Spacing();
+
+        if (CenteredButton("Back", ButtonSize))
+            currentPage = Page::Main;
+
+        ImGui::End();
+    }
     else if (currentPage == Page::Options)
     {
         BeginCenteredWindow("Options", ImVec2(350, 350));
@@ -249,4 +299,9 @@ MainMenu::Action MainMenu::Render(Window& window, Config& config, const std::str
 const SaveData& MainMenu::GetWorldData() const
 {
     return worldData;
+}
+
+const ConnectionInfo& MainMenu::GetConnectionInfo() const
+{
+    return connectionInfo;
 }

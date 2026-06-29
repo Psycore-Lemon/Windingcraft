@@ -132,3 +132,25 @@ BlockChange PacketSerializer::ReadBlockChange(ByteBuffer& buf)
     bc.type = static_cast<BlockType>(buf.ReadU16());
     return bc;
 }
+
+ByteBuffer PacketSerializer::WriteChunkData(const glm::ivec2& key, const std::vector<uint8_t>& chunkData)
+{
+    ByteBuffer buf;
+    buf.WriteU8(static_cast<uint8_t>(Net::PacketType::ServerChunkData));
+    buf.WriteI32(key.x);
+    buf.WriteI32(key.y);
+    buf.WriteU32(static_cast<uint32_t>(chunkData.size()));
+    buf.WriteBytes(chunkData.data(), chunkData.size());
+    return buf;
+}
+
+ChunkPacket PacketSerializer::ReadChunkData(ByteBuffer& buf)
+{
+    ChunkPacket cp;
+    cp.key.x = buf.ReadI32();
+    cp.key.y = buf.ReadI32();
+    uint32_t size = buf.ReadU32();
+    cp.data.resize(size);
+    buf.ReadBytes(cp.data.data(), size);
+    return cp;
+}

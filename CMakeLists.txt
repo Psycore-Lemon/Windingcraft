@@ -82,6 +82,8 @@ set(GRAPHICS_SOURCES
     src/graphics/Shader.h
     src/graphics/Mesh.cpp
     src/graphics/Mesh.h
+    src/graphics/PlayerRenderer.cpp
+    src/graphics/PlayerRenderer.h
     src/graphics/PrimitiveMeshes.cpp
     src/graphics/PrimitiveMeshes.h
     src/graphics/Renderer.cpp
@@ -112,6 +114,8 @@ set(SCENE_SOURCES
 
 set(NET_SOURCES
     src/net/ByteBuffer.h
+    src/net/ClientSession.cpp
+    src/net/ClientSession.h
     src/net/NetClient.cpp
     src/net/NetClient.h
     src/net/NetServer.cpp

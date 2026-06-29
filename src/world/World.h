@@ -15,8 +15,10 @@ class World
 {
 public:
     World(int seed, int loadRadius);
+    World(); // client mode: no generation, receives chunks from server
 
     void SetSaveDir(const std::string& dir);
+    void InjectChunk(const glm::ivec2& key, std::unique_ptr<Chunk> chunk);
 
     void Update(const glm::vec3& playerPosition);
     void SaveAll();

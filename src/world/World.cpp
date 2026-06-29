@@ -11,10 +11,21 @@ World::World(int seed, int loadRadius)
 {
 }
 
+World::World()
+    : generator(0), loadRadius(0)
+{
+}
+
 void World::SetSaveDir(const std::string& dir)
 {
     saveDir = dir;
     fs::create_directories(fs::path(dir) / "chunks");
+}
+
+void World::InjectChunk(const glm::ivec2& key, std::unique_ptr<Chunk> chunk)
+{
+    chunks[key] = std::move(chunk);
+    dirtyChunks[key] = true;
 }
 
 void World::Update(const glm::vec3& playerPosition)
