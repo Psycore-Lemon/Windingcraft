@@ -26,6 +26,13 @@ namespace GameConfig
     constexpr float TerrainNoiseFrequency = 0.02f;
     constexpr int TerrainNoiseOctaves = 4;
 
+    // Vitals
+    constexpr float BaseHealth = 100.0f;
+    constexpr float BaseMana = 50.0f;
+    constexpr float BaseStamina = 100.0f;
+    constexpr float StaminaRegenRate = 15.0f;
+    constexpr float ManaRegenRate = 3.0f;
+
     // Interaction
     constexpr float BlockReach = 8.0f;
     constexpr float RayStep = 0.05f;

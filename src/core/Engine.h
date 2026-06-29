@@ -16,6 +16,7 @@
 class Shader;
 class Renderer;
 class WorldRenderer;
+class TextureArray;
 class UIManager;
 
 class Engine
@@ -56,6 +57,7 @@ private:
     std::unique_ptr<Shader> lineShader;
     std::unique_ptr<Renderer> renderer;
     std::unique_ptr<WorldRenderer> worldRenderer;
+    std::unique_ptr<TextureArray> blockTextures;
     std::unique_ptr<UIManager> ui;
 
     CallbackData callbackData;

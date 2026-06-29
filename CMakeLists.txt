@@ -68,6 +68,7 @@ set(GAME_SOURCES
     src/game/GameConfig.h
     src/game/Inventory.cpp
     src/game/Inventory.h
+    src/game/Resource.h
     src/game/SaveData.cpp
     src/game/SaveData.h
 )
@@ -83,6 +84,9 @@ set(GRAPHICS_SOURCES
     src/graphics/Renderer.h
     src/graphics/Texture.cpp
     src/graphics/Texture.h
+    src/graphics/TextureArray.cpp
+    src/graphics/TextureArray.h
+    src/graphics/stb_image_impl.cpp
     src/graphics/WorldRenderer.cpp
     src/graphics/WorldRenderer.h
 )

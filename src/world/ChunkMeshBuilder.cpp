@@ -42,6 +42,7 @@ Mesh ChunkMeshBuilder::Build(const Chunk& chunk)
                     continue;
 
                 const BlockDef& def = Blocks::Get(type);
+                float layer = static_cast<float>(def.textureLayer);
                 glm::vec3 worldPos = chunk.BlockWorldPosition(x, y, z);
 
                 for (int f = 0; f < 6; ++f)
@@ -61,9 +62,7 @@ Mesh ChunkMeshBuilder::Build(const Chunk& chunk)
                         vertices.push_back(face.vertices[v][2] + worldPos.z);
                         vertices.push_back(face.vertices[v][3]);
                         vertices.push_back(face.vertices[v][4]);
-                        vertices.push_back(def.r);
-                        vertices.push_back(def.g);
-                        vertices.push_back(def.b);
+                        vertices.push_back(layer);
                     }
 
                     indices.push_back(indexOffset + 0);
@@ -81,8 +80,8 @@ Mesh ChunkMeshBuilder::Build(const Chunk& chunk)
 
     if (indices.empty())
     {
-        return Mesh({0,0,0,0,0,0,0,0}, {0,0,0}, 8);
+        return Mesh({0,0,0,0,0,0}, {0,0,0}, 6);
     }
 
-    return Mesh(vertices, indices, 8);
+    return Mesh(vertices, indices, 6);
 }

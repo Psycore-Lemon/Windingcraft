@@ -2,10 +2,12 @@
 
 #include <glm/glm.hpp>
 
+struct PlayerStatus;
+
 class HUD
 {
 public:
-    void RenderOverlay(const glm::vec3& playerPos, bool grounded, bool flying,
-                       int chunkCount, const char* lookingAt);
+    void RenderOverlay(const PlayerStatus& status, int chunkCount);
     void RenderCrosshair();
+    void RenderResourceBars(const PlayerStatus& status);
 };

@@ -5,6 +5,11 @@
 
 Player::Player(const glm::vec3& spawnPosition)
     : position(spawnPosition)
+    , vitals{
+        { GameConfig::BaseHealth, GameConfig::BaseHealth },
+        { GameConfig::BaseMana, GameConfig::BaseMana },
+        { GameConfig::BaseStamina, GameConfig::BaseStamina }
+    }
 {
 }
 
@@ -72,6 +77,9 @@ void Player::Update(float dt, const World& world)
 
     position.z += velocity.z * dt;
     ResolveCollisions(world, 2);
+
+    vitals.stamina.Restore(GameConfig::StaminaRegenRate * dt);
+    vitals.mana.Restore(GameConfig::ManaRegenRate * dt);
 }
 
 void Player::UpdateCamera(Camera& camera) const
@@ -87,6 +95,11 @@ bool Player::IsGrounded() const
 bool Player::IsFlying() const
 {
     return flying;
+}
+
+const Vitals& Player::GetVitals() const
+{
+    return vitals;
 }
 
 AABB Player::GetBoundingBox() const

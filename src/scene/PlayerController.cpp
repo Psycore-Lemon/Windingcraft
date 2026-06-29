@@ -81,6 +81,7 @@ PlayerStatus PlayerController::GetStatus() const
     status.flying = player.IsFlying();
     status.hasTarget = hasTarget;
     status.lookingAtBlock = lookingAtBlock;
+    status.vitals = player.GetVitals();
     return status;
 }
 

@@ -7,6 +7,7 @@
 #include "graphics/Shader.h"
 #include "graphics/Renderer.h"
 #include "graphics/WorldRenderer.h"
+#include "graphics/TextureArray.h"
 #include "ui/UIManager.h"
 
 Engine::Engine() = default;
@@ -32,6 +33,15 @@ bool Engine::Init(const std::string& path)
     lineShader = std::make_unique<Shader>("shaders/line-vertex.glsl", "shaders/line-fragment.glsl");
     renderer = std::make_unique<Renderer>(window.GetHandle());
     worldRenderer = std::make_unique<WorldRenderer>();
+
+    blockTextures = std::make_unique<TextureArray>(
+        std::vector<std::string>{
+            "assets/textures/stone.png",
+            "assets/textures/dirt.png"
+        }, 16);
+
+    shader->Use();
+    shader->SetInt("blockTextures", 0);
 
     ui = std::make_unique<UIManager>();
     ui->Init(window.GetHandle());
@@ -126,6 +136,7 @@ void Engine::Render()
         const Camera& cam = controller.GetCamera();
         float aspectRatio = window.GetAspectRatio();
 
+        blockTextures->Bind(0);
         worldRenderer->Render(*renderer, *shader, cam, aspectRatio);
 
         if (controller.HasTarget())

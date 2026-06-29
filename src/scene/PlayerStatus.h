@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include "game/BlockType.h"
+#include "game/Resource.h"
 
 struct PlayerStatus
 {
@@ -11,4 +12,6 @@ struct PlayerStatus
 
     bool hasTarget = false;
     BlockType lookingAtBlock = BlockType::Air;
+
+    Vitals vitals;
 };

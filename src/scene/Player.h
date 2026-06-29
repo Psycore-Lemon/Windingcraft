@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "game/GameConfig.h"
+#include "game/Resource.h"
 #include "physics/AABB.h"
 
 class Camera;
@@ -21,6 +22,7 @@ public:
 
     bool IsGrounded() const;
     bool IsFlying() const;
+    const Vitals& GetVitals() const;
 
     glm::vec3 position;
 
@@ -41,6 +43,8 @@ private:
         GameConfig::PlayerHeight * 0.5f,
         GameConfig::PlayerWidth * 0.5f
     );
+
+    Vitals vitals;
 
     bool grounded = false;
     bool flying = false;

@@ -34,15 +34,20 @@ Mesh::Mesh(const std::vector<float>& vertices,
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
 
-    // location 1 = vec2 edge coordinate (if present)
+    // location 1 = vec2 texcoord / edge coordinate (if present)
     if (floatsPerVertex >= 5)
     {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
     }
 
-    // location 2 = vec3 color (if present)
-    if (floatsPerVertex >= 8)
+    // location 2 = float texture layer (stride 6) or vec3 color (stride 8+)
+    if (floatsPerVertex >= 6 && floatsPerVertex < 8)
+    {
+        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+    }
+    else if (floatsPerVertex >= 8)
     {
         glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
         glEnableVertexAttribArray(2);

@@ -60,20 +60,15 @@ MainMenu::Action UIManager::RenderMainMenu(Window& window, Config& config, const
 PauseMenu::Action UIManager::RenderPaused(Window& window, Config& config, const std::string& configPath,
                                            const PlayerStatus& status, const Inventory& inventory, int chunkCount)
 {
-    const char* lookName = status.hasTarget
-        ? Blocks::Get(status.lookingAtBlock).name : "---";
-
-    hud.RenderOverlay(status.position, status.grounded, status.flying, chunkCount, lookName);
+    hud.RenderOverlay(status, chunkCount);
 
     return pauseMenu.Render(window, config, configPath);
 }
 
 void UIManager::RenderPlaying(const PlayerStatus& status, const Inventory& inventory, int chunkCount)
 {
-    const char* lookName = status.hasTarget
-        ? Blocks::Get(status.lookingAtBlock).name : "---";
-
-    hud.RenderOverlay(status.position, status.grounded, status.flying, chunkCount, lookName);
+    hud.RenderOverlay(status, chunkCount);
+    hud.RenderResourceBars(status);
     hud.RenderCrosshair();
     hotbar.Render(inventory);
 }
