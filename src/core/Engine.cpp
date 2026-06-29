@@ -196,7 +196,7 @@ void Engine::LeaveGame()
     renderWorld = nullptr;
     localPlayerId = -1;
     allSnapshots.clear();
-    localSnapshot = {};
+    localSnapshot = PlayerSnapshot();
 }
 
 void Engine::SaveWorld()
