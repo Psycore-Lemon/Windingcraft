@@ -212,6 +212,12 @@ void HostedServer::BroadcastSnapshots()
         snap.hasTarget = player.HasTarget();
         snap.lookingAtBlock = player.GetTargetBlock();
         snap.lookingAtBlockPos = player.GetTargetBlockPos();
+
+        const Inventory& inv = player.GetInventory();
+        snap.selectedIndex = inv.GetSelectedIndex();
+        for (int i = 0; i < Inventory::HOTBAR_SIZE; ++i)
+            snap.hotbar[i] = inv.GetSlot(i);
+
         snapshots.push_back(snap);
     }
 

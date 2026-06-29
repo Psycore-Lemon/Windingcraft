@@ -50,5 +50,6 @@ private:
     float lastMouseX = 0.0f;
     float lastMouseY = 0.0f;
     bool firstMouse = true;
+    int skipFrames = 0;
     bool active = true;
 };

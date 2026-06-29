@@ -36,6 +36,8 @@ public:
     void ApplyWorldChanges(World& world);
     void ApplyChunkData(World& world);
 
+    int GetPing() const;
+
 private:
     void HandlePacket(const uint8_t* data, size_t size);
 

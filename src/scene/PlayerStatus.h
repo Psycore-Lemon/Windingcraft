@@ -14,4 +14,6 @@ struct PlayerStatus
     BlockType lookingAtBlock = BlockType::Air;
 
     Vitals vitals;
+
+    int ping = -1;
 };

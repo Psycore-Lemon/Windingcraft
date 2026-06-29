@@ -244,7 +244,7 @@ void Engine::BuildLocalSnapshots()
 
 void Engine::Update(float dt)
 {
-    if (state != State::Playing || localPlayerId < 0)
+    if (state == State::Menu || localPlayerId < 0)
         return;
 
     accumulator += dt;
@@ -269,6 +269,10 @@ void Engine::Update(float dt)
 
         localSnapshot = clientSession->GetLocalSnapshot();
         allSnapshots = clientSession->GetAllSnapshots();
+
+        localInventory.SetSelectedIndex(localSnapshot.selectedIndex);
+        for (int i = 0; i < Inventory::HOTBAR_SIZE; ++i)
+            localInventory.SetSlot(i, localSnapshot.hotbar[i].type, localSnapshot.hotbar[i].count);
     }
     else
     {
@@ -335,34 +339,6 @@ void Engine::Render()
 
         controller.GetCamera().SetFOV(config.fov);
     }
-    else if (state == State::Paused)
-    {
-        PlayerStatus status;
-        status.position = localSnapshot.position;
-        status.grounded = localSnapshot.grounded;
-        status.flying = localSnapshot.flying;
-        status.hasTarget = localSnapshot.hasTarget;
-        status.lookingAtBlock = localSnapshot.lookingAtBlock;
-        status.vitals = localSnapshot.vitals;
-
-        auto action = ui->RenderPaused(window, config, configPath,
-                                        status, localInventory, chunkCount);
-
-        if (action == PauseMenu::Action::Resume)
-            SetState(State::Playing);
-        else if (action == PauseMenu::Action::QuitToMenu)
-        {
-            LeaveGame();
-            SetState(State::Menu);
-        }
-        else if (action == PauseMenu::Action::QuitToDesktop)
-        {
-            SaveWorld();
-            window.Close();
-        }
-
-        controller.GetCamera().SetFOV(config.fov);
-    }
     else
     {
         PlayerStatus status;
@@ -372,12 +348,36 @@ void Engine::Render()
         status.hasTarget = localSnapshot.hasTarget;
         status.lookingAtBlock = localSnapshot.lookingAtBlock;
         status.vitals = localSnapshot.vitals;
+        status.ping = clientSession ? clientSession->GetPing() : -1;
 
-        ui->RenderPlaying(status, localInventory, chunkCount);
+        if (state == State::Paused)
+        {
+            auto action = ui->RenderPaused(window, config, configPath,
+                                            status, localInventory, chunkCount);
 
-        const Camera& cam = controller.GetCamera();
-        float ar = window.GetAspectRatio();
-        playerRenderer->RenderNameTags(cam, ar, allSnapshots, localPlayerId);
+            if (action == PauseMenu::Action::Resume)
+                SetState(State::Playing);
+            else if (action == PauseMenu::Action::QuitToMenu)
+            {
+                LeaveGame();
+                SetState(State::Menu);
+            }
+            else if (action == PauseMenu::Action::QuitToDesktop)
+            {
+                SaveWorld();
+                window.Close();
+            }
+
+            controller.GetCamera().SetFOV(config.fov);
+        }
+        else
+        {
+            ui->RenderPlaying(status, localInventory, chunkCount);
+
+            const Camera& cam = controller.GetCamera();
+            float ar = window.GetAspectRatio();
+            playerRenderer->RenderNameTags(cam, ar, allSnapshots, localPlayerId);
+        }
     }
 
     ui->EndFrame();

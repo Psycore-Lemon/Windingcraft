@@ -21,6 +21,7 @@ public:
     void Poll();
 
     void Send(const ByteBuffer& data, bool reliable);
+    int GetPing() const;
 
     using ConnectedCallback = std::function<void()>;
     using DisconnectedCallback = std::function<void()>;

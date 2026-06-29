@@ -4,6 +4,7 @@
 #include "net/NetworkTypes.h"
 #include "game/PlayerCommand.h"
 #include "game/BlockType.h"
+#include "game/Inventory.h"
 #include "game/Resource.h"
 
 #include <glm/glm.hpp>
@@ -13,7 +14,7 @@
 struct PlayerSnapshot
 {
     int playerId = -1;
-    std::string username;
+    std::string username;  // populated client-side from cache, not sent per-tick
     glm::vec3 position{0.0f};
     bool grounded = false;
     bool flying = false;
@@ -21,6 +22,9 @@ struct PlayerSnapshot
     bool hasTarget = false;
     BlockType lookingAtBlock = BlockType::Air;
     glm::ivec3 lookingAtBlockPos{0};
+
+    int selectedIndex = 0;
+    InventorySlot hotbar[Inventory::HOTBAR_SIZE] = {};
 };
 
 struct BlockChange

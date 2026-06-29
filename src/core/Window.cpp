@@ -57,6 +57,8 @@ bool Window::Init(int width, int height, const std::string& title, bool fullscre
 
     glEnable(GL_DEPTH_TEST);
     glfwSetInputMode(handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(handle, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     glfwSwapInterval(1);
 
     glfwSetFramebufferSizeCallback(handle, [](GLFWwindow*, int w, int h) {

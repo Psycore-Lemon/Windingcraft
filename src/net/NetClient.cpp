@@ -123,6 +123,12 @@ void NetClient::Poll()
     }
 }
 
+int NetClient::GetPing() const
+{
+    if (!server || !connected) return 0;
+    return static_cast<int>(server->roundTripTime);
+}
+
 void NetClient::Send(const ByteBuffer& data, bool reliable)
 {
     if (!server || !connected) return;

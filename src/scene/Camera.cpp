@@ -28,14 +28,17 @@ void Camera::MouseCallback(GLFWwindow* window, double xpos, double ypos)
     if (!cam->active)
     {
         cam->firstMouse = true;
+        cam->skipFrames = 2;
         return;
     }
 
-    if (cam->firstMouse)
+    if (cam->firstMouse || cam->skipFrames > 0)
     {
         cam->lastMouseX = (float)xpos;
         cam->lastMouseY = (float)ypos;
         cam->firstMouse = false;
+        if (cam->skipFrames > 0) cam->skipFrames--;
+        return;
     }
 
     float dx = (float)xpos - cam->lastMouseX;

@@ -57,6 +57,11 @@ const glm::vec3& ClientSession::GetSpawnPosition() const { return spawnPos; }
 const PlayerSnapshot& ClientSession::GetLocalSnapshot() const { return localSnapshot; }
 const std::vector<PlayerSnapshot>& ClientSession::GetAllSnapshots() const { return allSnapshots; }
 
+int ClientSession::GetPing() const
+{
+    return client.GetPing();
+}
+
 void ClientSession::ApplyWorldChanges(World& world)
 {
     for (const auto& bc : pendingBlockChanges)

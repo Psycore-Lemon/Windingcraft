@@ -39,6 +39,8 @@ void HUD::RenderOverlay(const PlayerStatus& status, int chunkCount)
     if (ImGui::Begin("HUD", nullptr, flags))
     {
         ImGui::Text("FPS: %.0f", ImGui::GetIO().Framerate);
+        if (status.ping >= 0)
+            ImGui::Text("Ping: %d ms", status.ping);
         ImGui::Separator();
         ImGui::Text("Pos: %.1f, %.1f, %.1f", status.position.x, status.position.y, status.position.z);
         ImGui::Text("Mode: %s", status.flying ? "Flying" : (status.grounded ? "Grounded" : "Airborne"));

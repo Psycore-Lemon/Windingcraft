@@ -80,6 +80,14 @@ ByteBuffer PacketSerializer::WriteSnapshot(const std::vector<PlayerSnapshot>& sn
 
         buf.WriteU16(static_cast<uint16_t>(s.lookingAtBlock));
         buf.WriteIVec3(s.lookingAtBlockPos);
+
+        buf.WriteU8(static_cast<uint8_t>(s.selectedIndex));
+        buf.WriteU8(static_cast<uint8_t>(Inventory::HOTBAR_SIZE));
+        for (int slot = 0; slot < Inventory::HOTBAR_SIZE; ++slot)
+        {
+            buf.WriteU16(static_cast<uint16_t>(s.hotbar[slot].type));
+            buf.WriteI32(s.hotbar[slot].count);
+        }
     }
 
     return buf;
@@ -111,6 +119,14 @@ std::vector<PlayerSnapshot> PacketSerializer::ReadSnapshot(ByteBuffer& buf)
 
         s.lookingAtBlock = static_cast<BlockType>(buf.ReadU16());
         s.lookingAtBlockPos = buf.ReadIVec3();
+
+        s.selectedIndex = buf.ReadU8();
+        int slotCount = buf.ReadU8();
+        for (int slot = 0; slot < slotCount && slot < Inventory::HOTBAR_SIZE; ++slot)
+        {
+            s.hotbar[slot].type = static_cast<BlockType>(buf.ReadU16());
+            s.hotbar[slot].count = buf.ReadI32();
+        }
     }
 
     return snapshots;
