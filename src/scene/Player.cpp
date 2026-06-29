@@ -77,19 +77,27 @@ void Player::ProcessCommand(const PlayerCommand& cmd, float dt, World& world)
     secondaryWasDown = cmd.secondaryAction;
 }
 
+void Player::MoveAxis(int axis, float distance, const World& world)
+{
+    constexpr float maxStep = 0.4f;
+    int steps = (int)(std::abs(distance) / maxStep) + 1;
+    float stepSize = distance / (float)steps;
+
+    for (int i = 0; i < steps; ++i)
+    {
+        position[axis] += stepSize;
+        ResolveCollisions(world, axis);
+    }
+}
+
 void Player::PhysicsTick(float dt, const World& world)
 {
     if (!flying)
         velocity.y -= gravity * dt;
 
-    position.y += velocity.y * dt;
-    ResolveCollisions(world, 1);
-
-    position.x += velocity.x * dt;
-    ResolveCollisions(world, 0);
-
-    position.z += velocity.z * dt;
-    ResolveCollisions(world, 2);
+    MoveAxis(1, velocity.y * dt, world);
+    MoveAxis(0, velocity.x * dt, world);
+    MoveAxis(2, velocity.z * dt, world);
 
     vitals.stamina.Restore(GameConfig::StaminaRegenRate * dt);
     vitals.mana.Restore(GameConfig::ManaRegenRate * dt);

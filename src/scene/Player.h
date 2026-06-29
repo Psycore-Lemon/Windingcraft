@@ -35,6 +35,7 @@ public:
 
 private:
     AABB GetBoundingBox() const;
+    void MoveAxis(int axis, float distance, const World& world);
     void ResolveCollisions(const World& world, int axis);
     void UpdateTarget(const World& world);
 

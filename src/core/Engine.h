@@ -63,6 +63,7 @@ private:
     // Client-side
     PlayerController controller;
     PlayerSnapshot localSnapshot;
+    glm::vec3 smoothedPosition{0.0f};
     std::vector<PlayerSnapshot> allSnapshots;
     Inventory localInventory;
     World* renderWorld = nullptr;

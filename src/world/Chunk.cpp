@@ -1,5 +1,7 @@
 #include "world/Chunk.h"
 
+#include <cmath>
+
 Chunk::Chunk(int chunkX, int chunkZ)
     : chunkX(chunkX), chunkZ(chunkZ)
 {
@@ -39,12 +41,12 @@ std::vector<AABB> Chunk::GetNearbyAABBs(const glm::vec3& position, float radius)
     int worldOffsetX = chunkX * SIZE;
     int worldOffsetZ = chunkZ * SIZE;
 
-    int minX = std::max(0, (int)(position.x - radius) - worldOffsetX);
-    int maxX = std::min(SIZE - 1, (int)(position.x + radius) - worldOffsetX);
-    int minY = std::max(0, (int)(position.y - radius));
-    int maxY = std::min(MAX_HEIGHT - 1, (int)(position.y + radius));
-    int minZ = std::max(0, (int)(position.z - radius) - worldOffsetZ);
-    int maxZ = std::min(SIZE - 1, (int)(position.z + radius) - worldOffsetZ);
+    int minX = std::max(0, (int)std::floor(position.x - radius) - worldOffsetX);
+    int maxX = std::min(SIZE - 1, (int)std::floor(position.x + radius) - worldOffsetX);
+    int minY = std::max(0, (int)std::floor(position.y - radius));
+    int maxY = std::min(MAX_HEIGHT - 1, (int)std::floor(position.y + radius));
+    int minZ = std::max(0, (int)std::floor(position.z - radius) - worldOffsetZ);
+    int maxZ = std::min(SIZE - 1, (int)std::floor(position.z + radius) - worldOffsetZ);
 
     for (int x = minX; x <= maxX; ++x)
         for (int y = minY; y <= maxY; ++y)

@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <thread>
 #include <chrono>
+#include <cmath>
 
 #include "game/GameConfig.h"
 #include "graphics/Shader.h"
@@ -94,7 +95,9 @@ void Engine::ProcessInput()
 
     if (state == State::Playing && localPlayerId >= 0)
     {
+        float prevScroll = latestCommand.scrollDelta;
         latestCommand = controller.BuildCommand(*input);
+        latestCommand.scrollDelta += prevScroll;
         commandReady = true;
 
         if (!clientSession)
@@ -102,6 +105,7 @@ void Engine::ProcessInput()
             GameServer& gs = hostedServer
                 ? hostedServer->GetGameServer() : *server;
             gs.QueueCommand(localPlayerId, latestCommand);
+            latestCommand.scrollDelta = 0.0f;
         }
     }
 }
@@ -146,7 +150,8 @@ void Engine::StartWorld(const SaveData& data, bool host)
 
     accumulator = 0.0f;
     BuildLocalSnapshots();
-    controller.GetCamera().position = localSnapshot.position +
+    smoothedPosition = localSnapshot.position;
+    controller.GetCamera().position = smoothedPosition +
         glm::vec3(0.0f, GameConfig::PlayerEyeHeight, 0.0f);
     worldRenderer->Sync(*renderWorld);
 }
@@ -180,7 +185,9 @@ void Engine::ConnectToServer(const std::string& host, uint16_t port, const std::
     worldRenderer->Sync(*renderWorld);
 
     accumulator = 0.0f;
-    controller.GetCamera().position = clientSession->GetSpawnPosition() +
+    localSnapshot.position = clientSession->GetSpawnPosition();
+    smoothedPosition = localSnapshot.position;
+    controller.GetCamera().position = smoothedPosition +
         glm::vec3(0.0f, GameConfig::PlayerEyeHeight, 0.0f);
 
     SetState(State::Playing);
@@ -197,6 +204,7 @@ void Engine::LeaveGame()
     localPlayerId = -1;
     allSnapshots.clear();
     localSnapshot = PlayerSnapshot();
+    smoothedPosition = glm::vec3(0.0f);
 }
 
 void Engine::SaveWorld()
@@ -258,6 +266,7 @@ void Engine::Update(float dt)
             if (commandReady)
             {
                 clientSession->SendCommand(latestCommand);
+                latestCommand.scrollDelta = 0.0f;
                 commandReady = false;
             }
             accumulator -= GameConfig::TickInterval;
@@ -289,7 +298,9 @@ void Engine::Update(float dt)
         BuildLocalSnapshots();
     }
 
-    controller.GetCamera().position = localSnapshot.position +
+    float t = 1.0f - std::exp(-60.0f * dt);
+    smoothedPosition = glm::mix(smoothedPosition, localSnapshot.position, t);
+    controller.GetCamera().position = smoothedPosition +
         glm::vec3(0.0f, GameConfig::PlayerEyeHeight, 0.0f);
     worldRenderer->Sync(*renderWorld);
 }
