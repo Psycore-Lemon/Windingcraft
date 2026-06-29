@@ -1,7 +1,7 @@
 #include "scene/Player.h"
-#include "scene/Camera.h"
 #include "world/World.h"
-#include "core/InputHandler.h"
+
+#include <cmath>
 
 Player::Player(const glm::vec3& spawnPosition)
     : position(spawnPosition)
@@ -13,31 +13,16 @@ Player::Player(const glm::vec3& spawnPosition)
 {
 }
 
-void Player::ProcessInput(const InputHandler& input, const Camera& camera, float dt)
+void Player::ProcessCommand(const PlayerCommand& cmd, float dt, World& world)
 {
     timeSinceStart += dt;
-
-    glm::vec3 front = camera.GetFront();
-    glm::vec3 forward = glm::normalize(glm::vec3(front.x, 0.0f, front.z));
-    glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-
-    glm::vec3 move(0.0f);
-
-    if (input.IsActionDown(Action::MoveForward))  move += forward;
-    if (input.IsActionDown(Action::MoveBackward)) move -= forward;
-    if (input.IsActionDown(Action::MoveLeft))     move -= right;
-    if (input.IsActionDown(Action::MoveRight))    move += right;
-
-    if (glm::length(move) > 0.0f)
-        move = glm::normalize(move);
+    lookDirection = cmd.lookDirection;
 
     float speed = flying ? flySpeed : moveSpeed;
-    velocity.x = move.x * speed;
-    velocity.z = move.z * speed;
+    velocity.x = cmd.moveDirection.x * speed;
+    velocity.z = cmd.moveDirection.z * speed;
 
-    bool jumpDown = input.IsActionDown(Action::Jump);
-
-    if (jumpDown && !jumpWasDown)
+    if (cmd.jump && !jumpWasDown)
     {
         if (timeSinceStart - lastJumpTime < doubleTapWindow)
             flying = !flying;
@@ -50,21 +35,43 @@ void Player::ProcessInput(const InputHandler& input, const Camera& camera, float
             grounded = false;
         }
     }
-    jumpWasDown = jumpDown;
+    jumpWasDown = cmd.jump;
 
     if (flying)
     {
         velocity.y = 0.0f;
-
-        if (input.IsActionDown(Action::Jump))
-            velocity.y = flySpeed;
-
-        if (input.IsActionDown(Action::Descend))
-            velocity.y = -flySpeed;
+        if (cmd.jump)    velocity.y = flySpeed;
+        if (cmd.descend) velocity.y = -flySpeed;
     }
+
+    // Hotbar
+    if (cmd.scrollDelta != 0.0f)
+        inventory.ScrollSelection((int)cmd.scrollDelta);
+
+    if (cmd.hotbarSelect >= 0)
+        inventory.SetSelectedIndex(cmd.hotbarSelect);
+
+    // Raycast
+    UpdateTarget(world);
+
+    // Block actions (edge-triggered)
+    if (cmd.primaryAction && !primaryWasDown && hasTarget)
+        world.SetBlock(glm::vec3(lookingAtBlockPos), BlockType::Air);
+    primaryWasDown = cmd.primaryAction;
+
+    if (cmd.secondaryAction && !secondaryWasDown && hasTarget)
+    {
+        BlockType selected = inventory.GetSelectedType();
+        if (selected != BlockType::Air)
+        {
+            glm::vec3 placePos = glm::vec3(lookingAtBlockPos) + glm::vec3(lookingAtNormal);
+            world.SetBlock(placePos, selected);
+        }
+    }
+    secondaryWasDown = cmd.secondaryAction;
 }
 
-void Player::Update(float dt, const World& world)
+void Player::PhysicsTick(float dt, const World& world)
 {
     if (!flying)
         velocity.y -= gravity * dt;
@@ -82,24 +89,19 @@ void Player::Update(float dt, const World& world)
     vitals.mana.Restore(GameConfig::ManaRegenRate * dt);
 }
 
-void Player::UpdateCamera(Camera& camera) const
-{
-    camera.position = position + glm::vec3(0.0f, eyeHeight, 0.0f);
-}
+bool Player::IsGrounded() const { return grounded; }
+bool Player::IsFlying() const { return flying; }
+const Vitals& Player::GetVitals() const { return vitals; }
+Inventory& Player::GetInventory() { return inventory; }
+const Inventory& Player::GetInventory() const { return inventory; }
 
-bool Player::IsGrounded() const
-{
-    return grounded;
-}
+bool Player::HasTarget() const { return hasTarget; }
+BlockType Player::GetTargetBlock() const { return lookingAtBlock; }
+const glm::ivec3& Player::GetTargetBlockPos() const { return lookingAtBlockPos; }
 
-bool Player::IsFlying() const
+glm::vec3 Player::GetEyePosition() const
 {
-    return flying;
-}
-
-const Vitals& Player::GetVitals() const
-{
-    return vitals;
+    return position + glm::vec3(0.0f, eyeHeight, 0.0f);
 }
 
 AABB Player::GetBoundingBox() const
@@ -137,5 +139,42 @@ void Player::ResolveCollisions(const World& world, int axis)
                 velocity.y = 0.0f;
             }
         }
+    }
+}
+
+void Player::UpdateTarget(const World& world)
+{
+    hasTarget = false;
+    lookingAtBlock = BlockType::Air;
+    lookingAtNormal = glm::ivec3(0);
+
+    glm::vec3 origin = GetEyePosition();
+    glm::ivec3 prevBlock(
+        (int)std::floor(origin.x),
+        (int)std::floor(origin.y),
+        (int)std::floor(origin.z)
+    );
+
+    for (float t = 0.0f; t < GameConfig::BlockReach; t += GameConfig::RayStep)
+    {
+        glm::vec3 point = origin + lookDirection * t;
+        glm::ivec3 block(
+            (int)std::floor(point.x),
+            (int)std::floor(point.y),
+            (int)std::floor(point.z)
+        );
+
+        BlockType type = world.GetBlock(point);
+
+        if (Blocks::IsSolid(type))
+        {
+            hasTarget = true;
+            lookingAtBlock = type;
+            lookingAtBlockPos = block;
+            lookingAtNormal = prevBlock - block;
+            return;
+        }
+
+        prevBlock = block;
     }
 }

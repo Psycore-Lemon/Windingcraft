@@ -12,6 +12,9 @@ namespace GameConfig
     constexpr float PlayerHeight = 1.8f;
     constexpr float DoubleTapWindow = 0.3f;
     constexpr float MaxDeltaTime = 0.05f;
+    constexpr float TickRate = 30.0f;
+    constexpr float TickInterval = 1.0f / TickRate;
+    constexpr float MaxAccumulator = 0.25f;
 
     // World
     constexpr int ChunkSize = 16;

@@ -45,6 +45,9 @@ target_include_directories(imgui PUBLIC
 
 target_link_libraries(imgui PUBLIC glfw glad)
 
+# ENet
+add_subdirectory(dependencies/enet)
+
 # -------------------------
 # Source Files
 # -------------------------
@@ -68,6 +71,7 @@ set(GAME_SOURCES
     src/game/GameConfig.h
     src/game/Inventory.cpp
     src/game/Inventory.h
+    src/game/PlayerCommand.h
     src/game/Resource.h
     src/game/SaveData.cpp
     src/game/SaveData.h
@@ -104,6 +108,24 @@ set(SCENE_SOURCES
     src/scene/PlayerController.h
     src/scene/PlayerStatus.h
     src/scene/Transform.h
+)
+
+set(NET_SOURCES
+    src/net/ByteBuffer.h
+    src/net/NetClient.cpp
+    src/net/NetClient.h
+    src/net/NetServer.cpp
+    src/net/NetServer.h
+    src/net/NetworkTypes.h
+    src/net/PacketSerializer.cpp
+    src/net/PacketSerializer.h
+)
+
+set(SERVER_SOURCES
+    src/server/GameServer.cpp
+    src/server/GameServer.h
+    src/server/HostedServer.cpp
+    src/server/HostedServer.h
 )
 
 set(UI_SOURCES
@@ -145,8 +167,10 @@ add_executable(Windingcraft
     ${CORE_SOURCES}
     ${GAME_SOURCES}
     ${GRAPHICS_SOURCES}
+    ${NET_SOURCES}
     ${PHYSICS_SOURCES}
     ${SCENE_SOURCES}
+    ${SERVER_SOURCES}
     ${WORLD_SOURCES}
     ${UI_SOURCES}
 )
@@ -159,6 +183,7 @@ target_include_directories(Windingcraft PRIVATE
     src
     dependencies/fastnoiselite
     dependencies/stb
+    dependencies/enet/include
 )
 
 # -------------------------
@@ -171,4 +196,5 @@ target_link_libraries(Windingcraft PRIVATE
     json
     glm::glm
     imgui
+    enet
 )

@@ -23,6 +23,7 @@ Config ReadConfig(const std::string& filepath)
     config.windowWidth = data["window"].value("width", config.windowWidth);
     config.windowHeight = data["window"].value("height", config.windowHeight);
     config.fullscreen = data["window"].value("fullscreen", config.fullscreen);
+    config.fov = data.value("fov", config.fov);
 
     return config;
 }
@@ -33,6 +34,7 @@ void WriteConfig(const std::string& filepath, const Config& config)
     data["window"]["width"] = config.windowWidth;
     data["window"]["height"] = config.windowHeight;
     data["window"]["fullscreen"] = config.fullscreen;
+    data["fov"] = config.fov;
 
     std::ofstream file(filepath);
     file << data.dump(4);

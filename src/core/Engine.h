@@ -11,13 +11,16 @@
 
 #include "game/SaveData.h"
 #include "scene/PlayerController.h"
-#include "world/World.h"
 
 class Shader;
 class Renderer;
 class WorldRenderer;
 class TextureArray;
 class UIManager;
+class GameServer;
+class HostedServer;
+class World;
+class Player;
 
 class Engine
 {
@@ -34,12 +37,16 @@ public:
 private:
     enum class State { Menu, Playing, Paused };
 
-    void ProcessInput(float dt);
+    void ProcessInput();
     void Update(float dt);
     void Render();
     void SetState(State newState);
-    void StartWorld(const SaveData& data);
+    void StartWorld(const SaveData& data, bool host = true);
     void SaveWorld();
+
+    GameServer& GetActiveGameServer();
+    World& GetActiveWorld();
+    const Player& GetLocalPlayer();
 
     State state = State::Menu;
 
@@ -48,7 +55,10 @@ private:
     std::string configPath;
 
     PlayerController controller;
-    std::unique_ptr<World> world;
+    std::unique_ptr<GameServer> server;
+    std::unique_ptr<HostedServer> hostedServer;
+    int localPlayerId = -1;
+    bool hosting = false;
     SaveData currentSave;
 
     Time time;
@@ -62,4 +72,5 @@ private:
 
     CallbackData callbackData;
     bool escWasDown = false;
+    float accumulator = 0.0f;
 };

@@ -119,3 +119,8 @@ glm::vec3 Camera::GetFront() const
 {
     return front;
 }
+
+void Camera::SetFOV(float degrees)
+{
+    fov = degrees;
+}

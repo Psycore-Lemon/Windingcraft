@@ -43,4 +43,15 @@ void VideoSettings::Render(Window& window, Config& config, const std::string& co
         config.fullscreen = fullscreen;
         WriteConfig(configPath, config);
     }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+    ImGui::Text("Camera");
+    ImGui::Spacing();
+
+    if (ImGui::SliderFloat("FOV", &config.fov, 30.0f, 120.0f, "%.0f"))
+    {
+        WriteConfig(configPath, config);
+    }
 }

@@ -29,6 +29,7 @@ public:
 
     void SetActive(bool active);
     bool IsActive() const;
+    void SetFOV(float degrees);
 
 private:
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);

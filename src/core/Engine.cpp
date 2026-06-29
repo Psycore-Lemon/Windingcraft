@@ -8,6 +8,10 @@
 #include "graphics/Renderer.h"
 #include "graphics/WorldRenderer.h"
 #include "graphics/TextureArray.h"
+#include "server/GameServer.h"
+#include "server/HostedServer.h"
+#include "scene/Player.h"
+#include "world/World.h"
 #include "ui/UIManager.h"
 
 Engine::Engine() = default;
@@ -24,6 +28,7 @@ bool Engine::Init(const std::string& path)
 
     callbackData.camera = &controller.GetCamera();
     window.SetUserPointer(&callbackData);
+    controller.GetCamera().SetFOV(config.fov);
 
     input = std::make_unique<InputHandler>(window.GetHandle());
     callbackData.input = input.get();
@@ -58,13 +63,13 @@ void Engine::Run()
         time.Update();
         float dt = static_cast<float>(time.DeltaTime());
 
-        ProcessInput(dt);
+        ProcessInput();
         Update(dt);
         Render();
     }
 }
 
-void Engine::ProcessInput(float dt)
+void Engine::ProcessInput()
 {
     input->Update();
 
@@ -81,8 +86,11 @@ void Engine::ProcessInput(float dt)
     }
     escWasDown = escDown;
 
-    if (state == State::Playing)
-        controller.ProcessInput(*input, *world, dt);
+    if (state == State::Playing && localPlayerId >= 0)
+    {
+        PlayerCommand cmd = controller.BuildCommand(*input);
+        GetActiveGameServer().QueueCommand(localPlayerId, cmd);
+    }
 }
 
 void Engine::SetState(State newState)
@@ -97,41 +105,89 @@ void Engine::SetState(State newState)
         ui->GetPauseMenu().Reset();
 }
 
-void Engine::StartWorld(const SaveData& data)
+void Engine::StartWorld(const SaveData& data, bool host)
 {
     currentSave = data;
-    controller.Reset(data.playerPosition);
-    world = std::make_unique<World>(data.seed, GameConfig::ChunkLoadRadius);
+    hosting = host;
 
     std::string worldDir = SaveManager::SaveDir() + "/" + data.name;
-    world->SetSaveDir(worldDir);
 
-    world->Update(controller.GetPlayer().position);
-    worldRenderer->Sync(*world);
+    if (hosting)
+    {
+        hostedServer = std::make_unique<HostedServer>();
+        hostedServer->Start(data.seed, GameConfig::ChunkLoadRadius);
+        hostedServer->SetSaveDir(worldDir);
+        server = nullptr;
+
+        localPlayerId = hostedServer->GetGameServer().AddPlayer(data.playerPosition);
+    }
+    else
+    {
+        server = std::make_unique<GameServer>();
+        server->Init(data.seed, GameConfig::ChunkLoadRadius);
+        server->SetSaveDir(worldDir);
+
+        localPlayerId = server->AddPlayer(data.playerPosition);
+    }
+
+    accumulator = 0.0f;
+    controller.SyncFromServer(GetLocalPlayer());
+    worldRenderer->Sync(GetActiveWorld());
 }
 
 void Engine::SaveWorld()
 {
-    currentSave.playerPosition = controller.GetPlayer().position;
+    if (localPlayerId < 0) return;
+
+    currentSave.playerPosition = GetLocalPlayer().position;
     SaveManager::Save(currentSave.name, currentSave);
-    world->SaveAll();
+    GetActiveGameServer().SaveAll();
+}
+
+GameServer& Engine::GetActiveGameServer()
+{
+    if (hostedServer) return hostedServer->GetGameServer();
+    return *server;
+}
+
+World& Engine::GetActiveWorld()
+{
+    return GetActiveGameServer().GetWorld();
+}
+
+const Player& Engine::GetLocalPlayer()
+{
+    return GetActiveGameServer().GetPlayer(localPlayerId);
 }
 
 void Engine::Update(float dt)
 {
-    if (state != State::Playing)
+    if (state != State::Playing || localPlayerId < 0)
         return;
 
-    float clampedDt = (dt > GameConfig::MaxDeltaTime) ? GameConfig::MaxDeltaTime : dt;
-    controller.Update(clampedDt, *world);
-    worldRenderer->Sync(*world);
+    accumulator += dt;
+    if (accumulator > GameConfig::MaxAccumulator)
+        accumulator = GameConfig::MaxAccumulator;
+
+    while (accumulator >= GameConfig::TickInterval)
+    {
+        if (hostedServer)
+            hostedServer->Tick(GameConfig::TickInterval);
+        else if (server)
+            server->Tick(GameConfig::TickInterval);
+
+        accumulator -= GameConfig::TickInterval;
+    }
+
+    controller.SyncFromServer(GetLocalPlayer());
+    worldRenderer->Sync(GetActiveWorld());
 }
 
 void Engine::Render()
 {
     renderer->BeginFrame();
 
-    if (state != State::Menu && world)
+    if (state != State::Menu && localPlayerId >= 0)
     {
         const Camera& cam = controller.GetCamera();
         float aspectRatio = window.GetAspectRatio();
@@ -139,12 +195,12 @@ void Engine::Render()
         blockTextures->Bind(0);
         worldRenderer->Render(*renderer, *shader, cam, aspectRatio);
 
-        if (controller.HasTarget())
-            renderer->DrawBlockHighlight(*lineShader, cam, controller.GetLookingAtPos(), aspectRatio);
+        const Player& player = GetLocalPlayer();
+        if (player.HasTarget())
+            renderer->DrawBlockHighlight(*lineShader, cam, player.GetTargetBlockPos(), aspectRatio);
     }
 
     int chunkCount = worldRenderer ? worldRenderer->GetMeshCount() : 0;
-    PlayerStatus status = controller.GetStatus();
     bool interactive = (state != State::Playing);
     ui->BeginFrame(interactive);
 
@@ -161,16 +217,25 @@ void Engine::Render()
         {
             window.Close();
         }
+
+        controller.GetCamera().SetFOV(config.fov);
     }
     else if (state == State::Paused)
     {
-        auto action = ui->RenderPaused(window, config, configPath, status, controller.GetInventory(), chunkCount);
+        const Player& player = GetLocalPlayer();
+        PlayerStatus status = controller.GetStatus(player);
+
+        auto action = ui->RenderPaused(window, config, configPath, status, player.GetInventory(), chunkCount);
 
         if (action == PauseMenu::Action::Resume)
             SetState(State::Playing);
         else if (action == PauseMenu::Action::QuitToMenu)
         {
             SaveWorld();
+            hostedServer.reset();
+            server.reset();
+            localPlayerId = -1;
+            hosting = false;
             SetState(State::Menu);
         }
         else if (action == PauseMenu::Action::QuitToDesktop)
@@ -178,10 +243,14 @@ void Engine::Render()
             SaveWorld();
             window.Close();
         }
+
+        controller.GetCamera().SetFOV(config.fov);
     }
     else
     {
-        ui->RenderPlaying(status, controller.GetInventory(), chunkCount);
+        const Player& player = GetLocalPlayer();
+        PlayerStatus status = controller.GetStatus(player);
+        ui->RenderPlaying(status, player.GetInventory(), chunkCount);
     }
 
     ui->EndFrame();
