@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 
+#include "game/GameConfig.h"
 #include "physics/AABB.h"
 
 class Camera;
@@ -29,20 +30,23 @@ private:
 
     glm::vec3 velocity = glm::vec3(0.0f);
 
-    float moveSpeed = 5.0f;
-    float jumpForce = 7.0f;
-    float gravity = 20.0f;
-    float eyeHeight = 1.6f;
+    float moveSpeed = GameConfig::PlayerMoveSpeed;
+    float jumpForce = GameConfig::PlayerJumpForce;
+    float gravity = GameConfig::PlayerGravity;
+    float eyeHeight = GameConfig::PlayerEyeHeight;
+    float flySpeed = GameConfig::PlayerFlySpeed;
 
-    // Player hitbox: 0.6 wide, 1.8 tall, 0.6 deep
-    glm::vec3 halfExtents = glm::vec3(0.3f, 0.9f, 0.3f);
+    glm::vec3 halfExtents = glm::vec3(
+        GameConfig::PlayerWidth * 0.5f,
+        GameConfig::PlayerHeight * 0.5f,
+        GameConfig::PlayerWidth * 0.5f
+    );
 
     bool grounded = false;
     bool flying = false;
-    float flySpeed = 10.0f;
 
     bool jumpWasDown = false;
     float lastJumpTime = 0.0f;
-    float doubleTapWindow = 0.3f;
+    float doubleTapWindow = GameConfig::DoubleTapWindow;
     float timeSinceStart = 0.0f;
 };

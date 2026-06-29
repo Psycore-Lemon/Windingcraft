@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/BlockType.h"
+#include "game/GameConfig.h"
 
 struct InventorySlot
 {
@@ -13,7 +14,7 @@ struct InventorySlot
 class Inventory
 {
 public:
-    static constexpr int HOTBAR_SIZE = 9;
+    static constexpr int HOTBAR_SIZE = GameConfig::HotbarSize;
 
     Inventory();
 

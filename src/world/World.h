@@ -7,28 +7,14 @@
 #include <vector>
 
 #include "physics/AABB.h"
-#include "graphics/Mesh.h"
 #include "world/Chunk.h"
+#include "world/ChunkKey.h"
 #include "world/TerrainGenerator.h"
-
-struct ChunkKeyHash
-{
-    std::size_t operator()(const glm::ivec2& k) const
-    {
-        return std::hash<int>()(k.x) ^ (std::hash<int>()(k.y) << 16);
-    }
-};
-
-struct ChunkData
-{
-    std::unique_ptr<Chunk> chunk;
-    std::unique_ptr<Mesh> mesh;
-};
 
 class World
 {
 public:
-    World(int seed = 1337, int loadRadius = 8);
+    World(int seed, int loadRadius);
 
     void SetSaveDir(const std::string& dir);
 
@@ -40,7 +26,10 @@ public:
 
     std::vector<AABB> GetNearbyAABBs(const glm::vec3& position, float radius) const;
 
-    const std::unordered_map<glm::ivec2, ChunkData, ChunkKeyHash>& GetChunks() const;
+    const std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, ChunkKeyHash>& GetChunks() const;
+
+    bool IsChunkDirty(const glm::ivec2& key) const;
+    void ClearChunkDirty(const glm::ivec2& key);
 
 private:
     void LoadChunk(int chunkX, int chunkZ);
@@ -52,5 +41,6 @@ private:
     int loadRadius;
     std::string saveDir;
 
-    std::unordered_map<glm::ivec2, ChunkData, ChunkKeyHash> chunks;
+    std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, ChunkKeyHash> chunks;
+    std::unordered_map<glm::ivec2, bool, ChunkKeyHash> dirtyChunks;
 };

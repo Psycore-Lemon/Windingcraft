@@ -1,14 +1,15 @@
 #include "scene/Camera.h"
+#include "game/GameConfig.h"
 #include <GLFW/glfw3.h>
 
 Camera::Camera()
     : position(0.0f, 0.0f, 3.0f),
       front(0.0f, 0.0f, -1.0f),
       up(0.0f, 1.0f, 0.0f),
-      movementSpeed(5.0f),
-      fov(45.0f),
-      nearPlane(0.1f),
-      farPlane(1000.0f)
+      movementSpeed(GameConfig::PlayerMoveSpeed),
+      fov(GameConfig::CameraFOV),
+      nearPlane(GameConfig::CameraNearPlane),
+      farPlane(GameConfig::CameraFarPlane)
 {
 }
 

@@ -19,7 +19,7 @@ void Renderer::Draw(
     const Shader& shader,
     const Camera& camera,
     const glm::mat4& model,
-    float aspectRatio)
+    float aspectRatio) const
 {
     shader.Use();
 
@@ -34,7 +34,7 @@ void Renderer::DrawBlockHighlight(
     const Shader& shader,
     const Camera& camera,
     const glm::ivec3& blockPos,
-    float aspectRatio)
+    float aspectRatio) const
 {
     float e = 0.002f;
     float x0 = (float)blockPos.x - e;

@@ -13,9 +13,9 @@ void TerrainGenerator::Generate(Chunk& chunk) const
     FastNoiseLite noise;
     noise.SetSeed(seed);
     noise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
-    noise.SetFrequency(0.02f);
+    noise.SetFrequency(GameConfig::TerrainNoiseFrequency);
     noise.SetFractalType(FastNoiseLite::FractalType_FBm);
-    noise.SetFractalOctaves(4);
+    noise.SetFractalOctaves(GameConfig::TerrainNoiseOctaves);
 
     for (int x = 0; x < Chunk::SIZE; ++x)
     {
@@ -27,7 +27,7 @@ void TerrainGenerator::Generate(Chunk& chunk) const
             float n = noise.GetNoise(worldX, worldZ);
 
             int height = baseHeight + (int)(n * heightRange);
-            int dirtDepth = 3;
+            int dirtDepth = GameConfig::TerrainDirtDepth;
 
             for (int y = 0; y <= height; ++y)
             {

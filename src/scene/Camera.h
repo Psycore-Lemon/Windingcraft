@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "game/GameConfig.h"
 
 struct GLFWwindow;
 
@@ -43,7 +44,7 @@ private:
 
     float yaw = -90.0f;
     float pitch = 0.0f;
-    float mouseSensitivity = 0.1f;
+    float mouseSensitivity = GameConfig::MouseSensitivity;
 
     float lastMouseX = 0.0f;
     float lastMouseY = 0.0f;

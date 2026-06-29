@@ -1,11 +1,12 @@
 #include "scene/PlayerController.h"
 #include "core/InputHandler.h"
+#include "game/GameConfig.h"
 #include "world/World.h"
 
 #include <cmath>
 
 PlayerController::PlayerController()
-    : player(glm::vec3(0.0f, 20.0f, 0.0f))
+    : player(glm::vec3(0.0f, GameConfig::PlayerSpawnY, 0.0f))
 {
 }
 
@@ -32,13 +33,13 @@ void PlayerController::ProcessInput(const InputHandler& input, World& world, flo
     if (scroll != 0.0f)
         inventory.ScrollSelection((int)scroll);
 
-    for (int i = 0; i < 9; ++i)
+    for (int i = 0; i < GameConfig::HotbarSize; ++i)
     {
         if (input.IsKeyDown(0x31 + i))
             inventory.SetSelectedIndex(i);
     }
     if (input.IsKeyDown(0x30))
-        inventory.SetSelectedIndex(9);
+        inventory.SetSelectedIndex(GameConfig::HotbarSize);
 
     bool breakDown = input.IsMouseButtonDown(0);
     if (breakDown && !breakWasDown && hasTarget)
@@ -60,10 +61,8 @@ void PlayerController::ProcessInput(const InputHandler& input, World& world, flo
 
 void PlayerController::Update(float dt, World& world)
 {
-    float clampedDt = (dt > 0.05f) ? 0.05f : dt;
-
     world.Update(player.position);
-    player.Update(clampedDt, world);
+    player.Update(dt, world);
     player.UpdateCamera(camera);
 }
 
@@ -99,7 +98,7 @@ void PlayerController::UpdateLookTarget(const World& world)
         (int)std::floor(pos.z)
     );
 
-    for (float t = 0.0f; t < 8.0f; t += 0.05f)
+    for (float t = 0.0f; t < GameConfig::BlockReach; t += GameConfig::RayStep)
     {
         glm::vec3 point = pos + dir * t;
         glm::ivec3 block(

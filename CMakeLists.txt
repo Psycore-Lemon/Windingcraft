@@ -64,6 +64,7 @@ set(CORE_SOURCES
 
 set(GAME_SOURCES
     src/game/BlockType.h
+    src/game/GameConfig.h
     src/game/Inventory.cpp
     src/game/Inventory.h
     src/game/SaveData.cpp
@@ -79,6 +80,8 @@ set(GRAPHICS_SOURCES
     src/graphics/PrimitiveMeshes.h
     src/graphics/Renderer.cpp
     src/graphics/Renderer.h
+    src/graphics/WorldRenderer.cpp
+    src/graphics/WorldRenderer.h
 )
 
 set(PHYSICS_SOURCES
@@ -113,6 +116,7 @@ set(UI_SOURCES
 set(WORLD_SOURCES
     src/world/Chunk.cpp
     src/world/Chunk.h
+    src/world/ChunkKey.h
     src/world/ChunkMeshBuilder.cpp
     src/world/ChunkMeshBuilder.h
     src/world/ChunkSerializer.cpp

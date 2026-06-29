@@ -1,5 +1,4 @@
 #include "world/World.h"
-#include "world/ChunkMeshBuilder.h"
 #include "world/ChunkSerializer.h"
 
 #include <cmath>
@@ -39,10 +38,10 @@ void World::SaveAll()
     if (saveDir.empty())
         return;
 
-    for (const auto& [key, data] : chunks)
+    for (const auto& [key, chunk] : chunks)
     {
         std::string path = ChunkFilePath(key.x, key.y);
-        ChunkSerializer::SaveToFile(*data.chunk, path);
+        ChunkSerializer::SaveToFile(*chunk, path);
     }
 }
 
@@ -63,7 +62,7 @@ std::vector<AABB> World::GetNearbyAABBs(const glm::vec3& position, float radius)
             if (it == chunks.end())
                 continue;
 
-            auto chunkAABBs = it->second.chunk->GetNearbyAABBs(position, radius);
+            auto chunkAABBs = it->second->GetNearbyAABBs(position, radius);
             result.insert(result.end(), chunkAABBs.begin(), chunkAABBs.end());
         }
     }
@@ -71,9 +70,20 @@ std::vector<AABB> World::GetNearbyAABBs(const glm::vec3& position, float radius)
     return result;
 }
 
-const std::unordered_map<glm::ivec2, ChunkData, ChunkKeyHash>& World::GetChunks() const
+const std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, ChunkKeyHash>& World::GetChunks() const
 {
     return chunks;
+}
+
+bool World::IsChunkDirty(const glm::ivec2& key) const
+{
+    auto it = dirtyChunks.find(key);
+    return it != dirtyChunks.end() && it->second;
+}
+
+void World::ClearChunkDirty(const glm::ivec2& key)
+{
+    dirtyChunks[key] = false;
 }
 
 void World::LoadChunk(int chunkX, int chunkZ)
@@ -86,10 +96,9 @@ void World::LoadChunk(int chunkX, int chunkZ)
     if (!loaded)
         generator.Generate(*chunk);
 
-    auto mesh = std::make_unique<Mesh>(ChunkMeshBuilder::Build(*chunk));
-
     glm::ivec2 key(chunkX, chunkZ);
-    chunks[key] = ChunkData{ std::move(chunk), std::move(mesh) };
+    chunks[key] = std::move(chunk);
+    dirtyChunks[key] = true;
 }
 
 std::string World::ChunkFilePath(int chunkX, int chunkZ) const
@@ -121,7 +130,7 @@ BlockType World::GetBlock(const glm::vec3& worldPos) const
     int lx = b.x - cx * Chunk::SIZE;
     int lz = b.z - cz * Chunk::SIZE;
 
-    return it->second.chunk->GetBlock(lx, b.y, lz);
+    return it->second->GetBlock(lx, b.y, lz);
 }
 
 bool World::SetBlock(const glm::vec3& worldPos, BlockType type)
@@ -131,15 +140,16 @@ bool World::SetBlock(const glm::vec3& worldPos, BlockType type)
     int cx = (int)std::floor((float)b.x / Chunk::SIZE);
     int cz = (int)std::floor((float)b.z / Chunk::SIZE);
 
-    auto it = chunks.find(glm::ivec2(cx, cz));
+    glm::ivec2 key(cx, cz);
+    auto it = chunks.find(key);
     if (it == chunks.end())
         return false;
 
     int lx = b.x - cx * Chunk::SIZE;
     int lz = b.z - cz * Chunk::SIZE;
 
-    it->second.chunk->SetBlock(lx, b.y, lz, type);
-    it->second.mesh = std::make_unique<Mesh>(ChunkMeshBuilder::Build(*it->second.chunk));
+    it->second->SetBlock(lx, b.y, lz, type);
+    dirtyChunks[key] = true;
 
     return true;
 }

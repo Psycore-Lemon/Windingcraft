@@ -3,8 +3,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "game/GameConfig.h"
 #include "graphics/Shader.h"
 #include "graphics/Renderer.h"
+#include "graphics/WorldRenderer.h"
 #include "ui/UIManager.h"
 
 Engine::Engine() = default;
@@ -27,6 +29,7 @@ bool Engine::Init(const std::string& path)
     shader = std::make_unique<Shader>("shaders/vertex-shader.glsl", "shaders/fragment-shader.glsl");
     lineShader = std::make_unique<Shader>("shaders/line-vertex.glsl", "shaders/line-fragment.glsl");
     renderer = std::make_unique<Renderer>(window.GetHandle());
+    worldRenderer = std::make_unique<WorldRenderer>();
 
     ui = std::make_unique<UIManager>();
     ui->Init(window.GetHandle());
@@ -86,12 +89,13 @@ void Engine::StartWorld(const SaveData& data)
 {
     currentSave = data;
     controller.Reset(data.playerPosition);
-    world = std::make_unique<World>(data.seed);
+    world = std::make_unique<World>(data.seed, GameConfig::ChunkLoadRadius);
 
     std::string worldDir = SaveManager::SaveDir() + "/" + data.name;
     world->SetSaveDir(worldDir);
 
     world->Update(controller.GetPlayer().position);
+    worldRenderer->Sync(*world);
 }
 
 void Engine::SaveWorld()
@@ -106,7 +110,9 @@ void Engine::Update(float dt)
     if (state != State::Playing)
         return;
 
-    controller.Update(dt, *world);
+    float clampedDt = (dt > GameConfig::MaxDeltaTime) ? GameConfig::MaxDeltaTime : dt;
+    controller.Update(clampedDt, *world);
+    worldRenderer->Sync(*world);
 }
 
 void Engine::Render()
@@ -117,19 +123,14 @@ void Engine::Render()
     {
         const Camera& cam = controller.GetCamera();
         float aspectRatio = window.GetAspectRatio();
-        glm::mat4 identity(1.0f);
 
-        for (const auto& [key, data] : world->GetChunks())
-        {
-            if (data.mesh)
-                renderer->Draw(*data.mesh, *shader, cam, identity, aspectRatio);
-        }
+        worldRenderer->Render(*renderer, *shader, cam, aspectRatio);
 
         if (controller.HasTarget())
             renderer->DrawBlockHighlight(*lineShader, cam, controller.GetLookingAtPos(), aspectRatio);
     }
 
-    int chunkCount = world ? (int)world->GetChunks().size() : 0;
+    int chunkCount = worldRenderer ? worldRenderer->GetMeshCount() : 0;
     PlayerStatus status = controller.GetStatus();
     bool interactive = (state != State::Playing);
     ui->BeginFrame(interactive);

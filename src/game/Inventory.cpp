@@ -2,8 +2,8 @@
 
 Inventory::Inventory()
 {
-    hotbar[0] = { BlockType::Dirt, 64 };
-    hotbar[1] = { BlockType::Stone, 64 };
+    hotbar[0] = { BlockType::Dirt, GameConfig::DefaultStackSize };
+    hotbar[1] = { BlockType::Stone, GameConfig::DefaultStackSize };
 }
 
 const InventorySlot& Inventory::GetSlot(int index) const

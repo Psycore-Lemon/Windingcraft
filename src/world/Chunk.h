@@ -5,13 +5,14 @@
 #include <vector>
 
 #include "game/BlockType.h"
+#include "game/GameConfig.h"
 #include "physics/AABB.h"
 
 class Chunk
 {
 public:
-    static constexpr int SIZE = 16;
-    static constexpr int MAX_HEIGHT = 64;
+    static constexpr int SIZE = GameConfig::ChunkSize;
+    static constexpr int MAX_HEIGHT = GameConfig::ChunkMaxHeight;
 
     Chunk(int chunkX, int chunkZ);
 
