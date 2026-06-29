@@ -22,6 +22,10 @@ public:
                 const std::vector<PlayerSnapshot>& players,
                 int localPlayerId);
 
+    void RenderNameTags(const Camera& camera, float aspectRatio,
+                        const std::vector<PlayerSnapshot>& players,
+                        int localPlayerId);
+
 private:
     std::unique_ptr<Mesh> bodyMesh;
     std::unique_ptr<Mesh> headMesh;

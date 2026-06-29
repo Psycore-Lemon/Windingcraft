@@ -1,8 +1,8 @@
 {
     "fov": 90.0,
     "window": {
-        "fullscreen": true,
-        "height": 1440,
-        "width": 2560
+        "fullscreen": false,
+        "height": 720,
+        "width": 1280
     }
 }

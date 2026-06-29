@@ -24,8 +24,11 @@ public:
 
     void Tick(float dt);
 
+    void RegisterPlayer(int playerId, const std::string& username);
+
     GameServer& GetGameServer();
     const GameServer& GetGameServer() const;
+    std::string GetPlayerUsername(int playerId) const;
 
 private:
     void OnPeerConnect(int peerId, const std::string& username);
@@ -33,6 +36,7 @@ private:
     void OnPeerData(int peerId, const uint8_t* data, size_t size);
 
     void BroadcastSnapshots();
+    void BroadcastBlockChanges();
     void StreamChunks();
 
     GameServer gameServer;

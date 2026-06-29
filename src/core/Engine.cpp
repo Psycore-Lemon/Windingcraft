@@ -14,7 +14,6 @@
 #include "server/GameServer.h"
 #include "server/HostedServer.h"
 #include "net/ClientSession.h"
-#include "game/Inventory.h"
 #include "scene/Player.h"
 #include "world/World.h"
 #include "ui/UIManager.h"
@@ -41,8 +40,10 @@ bool Engine::Init(const std::string& path)
     controller.AttachToWindow(window.GetHandle());
     shader = std::make_unique<Shader>("shaders/vertex-shader.glsl", "shaders/fragment-shader.glsl");
     lineShader = std::make_unique<Shader>("shaders/line-vertex.glsl", "shaders/line-fragment.glsl");
+    colorShader = std::make_unique<Shader>("shaders/color-vertex.glsl", "shaders/color-fragment.glsl");
     renderer = std::make_unique<Renderer>(window.GetHandle());
     worldRenderer = std::make_unique<WorldRenderer>();
+    playerRenderer = std::make_unique<PlayerRenderer>();
 
     blockTextures = std::make_unique<TextureArray>(
         std::vector<std::string>{
@@ -52,9 +53,6 @@ bool Engine::Init(const std::string& path)
 
     shader->Use();
     shader->SetInt("blockTextures", 0);
-
-    colorShader = std::make_unique<Shader>("shaders/color-vertex.glsl", "shaders/color-fragment.glsl");
-    playerRenderer = std::make_unique<PlayerRenderer>();
 
     ui = std::make_unique<UIManager>();
     ui->Init(window.GetHandle());
@@ -96,12 +94,15 @@ void Engine::ProcessInput()
 
     if (state == State::Playing && localPlayerId >= 0)
     {
-        PlayerCommand cmd = controller.BuildCommand(*input);
+        latestCommand = controller.BuildCommand(*input);
+        commandReady = true;
 
-        if (IsRemoteClient())
-            clientSession->SendCommand(cmd);
-        else
-            GetActiveGameServer().QueueCommand(localPlayerId, cmd);
+        if (!clientSession)
+        {
+            GameServer& gs = hostedServer
+                ? hostedServer->GetGameServer() : *server;
+            gs.QueueCommand(localPlayerId, latestCommand);
+        }
     }
 }
 
@@ -120,18 +121,18 @@ void Engine::SetState(State newState)
 void Engine::StartWorld(const SaveData& data, bool host)
 {
     currentSave = data;
-    hosting = host;
-
     std::string worldDir = SaveManager::SaveDir() + "/" + data.name;
 
-    if (hosting)
+    if (host)
     {
         hostedServer = std::make_unique<HostedServer>();
         hostedServer->Start(data.seed, GameConfig::ChunkLoadRadius);
         hostedServer->SetSaveDir(worldDir);
-        server = nullptr;
 
         localPlayerId = hostedServer->GetGameServer().AddPlayer(data.playerPosition);
+        hostedServer->RegisterPlayer(localPlayerId, "Host");
+
+        renderWorld = &hostedServer->GetGameServer().GetWorld();
     }
     else
     {
@@ -140,11 +141,14 @@ void Engine::StartWorld(const SaveData& data, bool host)
         server->SetSaveDir(worldDir);
 
         localPlayerId = server->AddPlayer(data.playerPosition);
+        renderWorld = &server->GetWorld();
     }
 
     accumulator = 0.0f;
-    controller.SyncFromServer(GetLocalPlayer());
-    worldRenderer->Sync(GetActiveWorld());
+    BuildLocalSnapshots();
+    controller.GetCamera().position = localSnapshot.position +
+        glm::vec3(0.0f, GameConfig::PlayerEyeHeight, 0.0f);
+    worldRenderer->Sync(*renderWorld);
 }
 
 void Engine::ConnectToServer(const std::string& host, uint16_t port, const std::string& username)
@@ -157,7 +161,6 @@ void Engine::ConnectToServer(const std::string& host, uint16_t port, const std::
         return;
     }
 
-    // Wait briefly for accept packet
     for (int i = 0; i < 50 && !clientSession->IsAccepted(); ++i)
     {
         clientSession->Poll();
@@ -173,7 +176,8 @@ void Engine::ConnectToServer(const std::string& host, uint16_t port, const std::
     localPlayerId = clientSession->GetPlayerId();
 
     remoteWorld = std::make_unique<World>();
-    worldRenderer->Sync(*remoteWorld);
+    renderWorld = remoteWorld.get();
+    worldRenderer->Sync(*renderWorld);
 
     accumulator = 0.0f;
     controller.GetCamera().position = clientSession->GetSpawnPosition() +
@@ -182,35 +186,60 @@ void Engine::ConnectToServer(const std::string& host, uint16_t port, const std::
     SetState(State::Playing);
 }
 
+void Engine::LeaveGame()
+{
+    SaveWorld();
+    clientSession.reset();
+    remoteWorld.reset();
+    hostedServer.reset();
+    server.reset();
+    renderWorld = nullptr;
+    localPlayerId = -1;
+    allSnapshots.clear();
+    localSnapshot = {};
+}
+
 void Engine::SaveWorld()
 {
-    if (IsRemoteClient() || localPlayerId < 0) return;
+    if (clientSession || localPlayerId < 0) return;
 
-    currentSave.playerPosition = GetLocalPlayer().position;
+    currentSave.playerPosition = localSnapshot.position;
     SaveManager::Save(currentSave.name, currentSave);
-    GetActiveGameServer().SaveAll();
+
+    GameServer& gs = hostedServer
+        ? hostedServer->GetGameServer() : *server;
+    gs.SaveAll();
 }
 
-GameServer& Engine::GetActiveGameServer()
+void Engine::BuildLocalSnapshots()
 {
-    if (hostedServer) return hostedServer->GetGameServer();
-    return *server;
-}
+    GameServer& gs = hostedServer
+        ? hostedServer->GetGameServer() : *server;
 
-World& Engine::GetActiveWorld()
-{
-    if (remoteWorld) return *remoteWorld;
-    return GetActiveGameServer().GetWorld();
-}
+    allSnapshots.clear();
+    for (const auto& [id, player] : gs.GetPlayers())
+    {
+        PlayerSnapshot snap;
+        snap.playerId = id;
+        snap.position = player->position;
+        snap.grounded = player->IsGrounded();
+        snap.flying = player->IsFlying();
+        snap.vitals = player->GetVitals();
+        snap.hasTarget = player->HasTarget();
+        snap.lookingAtBlock = player->GetTargetBlock();
+        snap.lookingAtBlockPos = player->GetTargetBlockPos();
 
-const Player& Engine::GetLocalPlayer()
-{
-    return GetActiveGameServer().GetPlayer(localPlayerId);
-}
+        if (hostedServer)
+            snap.username = hostedServer->GetPlayerUsername(id);
 
-bool Engine::IsRemoteClient() const
-{
-    return clientSession != nullptr;
+        allSnapshots.push_back(snap);
+
+        if (id == localPlayerId)
+        {
+            localSnapshot = snap;
+            localInventory = player->GetInventory();
+        }
+    }
 }
 
 void Engine::Update(float dt)
@@ -218,24 +247,31 @@ void Engine::Update(float dt)
     if (state != State::Playing || localPlayerId < 0)
         return;
 
-    if (IsRemoteClient())
+    accumulator += dt;
+    if (accumulator > GameConfig::MaxAccumulator)
+        accumulator = GameConfig::MaxAccumulator;
+
+    if (clientSession)
     {
+        while (accumulator >= GameConfig::TickInterval)
+        {
+            if (commandReady)
+            {
+                clientSession->SendCommand(latestCommand);
+                commandReady = false;
+            }
+            accumulator -= GameConfig::TickInterval;
+        }
+
         clientSession->Poll();
         clientSession->ApplyWorldChanges(*remoteWorld);
         clientSession->ApplyChunkData(*remoteWorld);
 
-        const auto& snap = clientSession->GetLocalSnapshot();
-        controller.GetCamera().position = snap.position +
-            glm::vec3(0.0f, GameConfig::PlayerEyeHeight, 0.0f);
-
-        worldRenderer->Sync(*remoteWorld);
+        localSnapshot = clientSession->GetLocalSnapshot();
+        allSnapshots = clientSession->GetAllSnapshots();
     }
     else
     {
-        accumulator += dt;
-        if (accumulator > GameConfig::MaxAccumulator)
-            accumulator = GameConfig::MaxAccumulator;
-
         while (accumulator >= GameConfig::TickInterval)
         {
             if (hostedServer)
@@ -246,16 +282,19 @@ void Engine::Update(float dt)
             accumulator -= GameConfig::TickInterval;
         }
 
-        controller.SyncFromServer(GetLocalPlayer());
-        worldRenderer->Sync(GetActiveWorld());
+        BuildLocalSnapshots();
     }
+
+    controller.GetCamera().position = localSnapshot.position +
+        glm::vec3(0.0f, GameConfig::PlayerEyeHeight, 0.0f);
+    worldRenderer->Sync(*renderWorld);
 }
 
 void Engine::Render()
 {
     renderer->BeginFrame();
 
-    if (state != State::Menu && localPlayerId >= 0)
+    if (state != State::Menu && localPlayerId >= 0 && renderWorld)
     {
         const Camera& cam = controller.GetCamera();
         float aspectRatio = window.GetAspectRatio();
@@ -263,37 +302,12 @@ void Engine::Render()
         blockTextures->Bind(0);
         worldRenderer->Render(*renderer, *shader, cam, aspectRatio);
 
-        if (!IsRemoteClient())
-        {
-            const Player& player = GetLocalPlayer();
-            if (player.HasTarget())
-                renderer->DrawBlockHighlight(*lineShader, cam, player.GetTargetBlockPos(), aspectRatio);
-        }
-        else
-        {
-            const auto& snap = clientSession->GetLocalSnapshot();
-            if (snap.hasTarget)
-                renderer->DrawBlockHighlight(*lineShader, cam, snap.lookingAtBlockPos, aspectRatio);
-        }
+        if (localSnapshot.hasTarget)
+            renderer->DrawBlockHighlight(*lineShader, cam,
+                localSnapshot.lookingAtBlockPos, aspectRatio);
 
-        if (IsRemoteClient())
-        {
-            playerRenderer->Render(*renderer, *colorShader, cam, aspectRatio,
-                                   clientSession->GetAllSnapshots(), localPlayerId);
-        }
-        else if (hostedServer)
-        {
-            std::vector<PlayerSnapshot> snapshots;
-            for (const auto& [id, player] : hostedServer->GetGameServer().GetPlayers())
-            {
-                PlayerSnapshot snap;
-                snap.playerId = id;
-                snap.position = player->position;
-                snapshots.push_back(snap);
-            }
-            playerRenderer->Render(*renderer, *colorShader, cam, aspectRatio,
-                                   snapshots, localPlayerId);
-        }
+        playerRenderer->Render(*renderer, *colorShader, cam, aspectRatio,
+                               allSnapshots, localPlayerId);
     }
 
     int chunkCount = worldRenderer ? worldRenderer->GetMeshCount() : 0;
@@ -324,40 +338,21 @@ void Engine::Render()
     else if (state == State::Paused)
     {
         PlayerStatus status;
-        const Inventory* inv = nullptr;
+        status.position = localSnapshot.position;
+        status.grounded = localSnapshot.grounded;
+        status.flying = localSnapshot.flying;
+        status.hasTarget = localSnapshot.hasTarget;
+        status.lookingAtBlock = localSnapshot.lookingAtBlock;
+        status.vitals = localSnapshot.vitals;
 
-        if (IsRemoteClient())
-        {
-            const auto& snap = clientSession->GetLocalSnapshot();
-            status.position = snap.position;
-            status.grounded = snap.grounded;
-            status.flying = snap.flying;
-            status.hasTarget = snap.hasTarget;
-            status.lookingAtBlock = snap.lookingAtBlock;
-            status.vitals = snap.vitals;
-        }
-        else
-        {
-            const Player& player = GetLocalPlayer();
-            status = controller.GetStatus(player);
-            inv = &player.GetInventory();
-        }
-
-        static Inventory emptyInv;
-        auto action = ui->RenderPaused(window, config, configPath, status,
-                                        inv ? *inv : emptyInv, chunkCount);
+        auto action = ui->RenderPaused(window, config, configPath,
+                                        status, localInventory, chunkCount);
 
         if (action == PauseMenu::Action::Resume)
             SetState(State::Playing);
         else if (action == PauseMenu::Action::QuitToMenu)
         {
-            SaveWorld();
-            clientSession.reset();
-            remoteWorld.reset();
-            hostedServer.reset();
-            server.reset();
-            localPlayerId = -1;
-            hosting = false;
+            LeaveGame();
             SetState(State::Menu);
         }
         else if (action == PauseMenu::Action::QuitToDesktop)
@@ -371,27 +366,18 @@ void Engine::Render()
     else
     {
         PlayerStatus status;
-        const Inventory* inv = nullptr;
+        status.position = localSnapshot.position;
+        status.grounded = localSnapshot.grounded;
+        status.flying = localSnapshot.flying;
+        status.hasTarget = localSnapshot.hasTarget;
+        status.lookingAtBlock = localSnapshot.lookingAtBlock;
+        status.vitals = localSnapshot.vitals;
 
-        if (IsRemoteClient())
-        {
-            const auto& snap = clientSession->GetLocalSnapshot();
-            status.position = snap.position;
-            status.grounded = snap.grounded;
-            status.flying = snap.flying;
-            status.hasTarget = snap.hasTarget;
-            status.lookingAtBlock = snap.lookingAtBlock;
-            status.vitals = snap.vitals;
-        }
-        else
-        {
-            const Player& player = GetLocalPlayer();
-            status = controller.GetStatus(player);
-            inv = &player.GetInventory();
-        }
+        ui->RenderPlaying(status, localInventory, chunkCount);
 
-        static Inventory emptyInv;
-        ui->RenderPlaying(status, inv ? *inv : emptyInv, chunkCount);
+        const Camera& cam = controller.GetCamera();
+        float ar = window.GetAspectRatio();
+        playerRenderer->RenderNameTags(cam, ar, allSnapshots, localPlayerId);
     }
 
     ui->EndFrame();

@@ -51,8 +51,14 @@ void HostedServer::Tick(float dt)
 {
     netServer.Poll();
     gameServer.Tick(dt);
+    BroadcastBlockChanges();
     BroadcastSnapshots();
     StreamChunks();
+}
+
+void HostedServer::RegisterPlayer(int playerId, const std::string& username)
+{
+    playerUsernames[playerId] = username;
 }
 
 GameServer& HostedServer::GetGameServer()
@@ -65,11 +71,32 @@ const GameServer& HostedServer::GetGameServer() const
     return gameServer;
 }
 
+std::string HostedServer::GetPlayerUsername(int playerId) const
+{
+    auto it = playerUsernames.find(playerId);
+    return (it != playerUsernames.end()) ? it->second : "";
+}
+
+void HostedServer::BroadcastBlockChanges()
+{
+    World& world = gameServer.GetWorld();
+    const auto& changes = world.GetBlockChanges();
+
+    for (const auto& change : changes)
+    {
+        ByteBuffer buf = PacketSerializer::WriteBlockChange(change.pos, change.type);
+        netServer.Broadcast(buf, true);
+    }
+
+    world.ClearBlockChanges();
+}
+
 void HostedServer::StreamChunks()
 {
     const World& world = gameServer.GetWorld();
     const auto& allChunks = world.GetChunks();
     int radius = GameConfig::ChunkLoadRadius;
+    constexpr int maxChunksPerTick = 4;
 
     for (auto& [playerId, username] : playerUsernames)
     {
@@ -82,10 +109,11 @@ void HostedServer::StreamChunks()
         int cz = (int)std::floor(player.position.z / (float)GameConfig::ChunkSize);
 
         auto& sent = sentChunks[peerId];
+        int sentThisTick = 0;
 
-        for (int dx = -radius; dx <= radius; ++dx)
+        for (int dx = -radius; dx <= radius && sentThisTick < maxChunksPerTick; ++dx)
         {
-            for (int dz = -radius; dz <= radius; ++dz)
+            for (int dz = -radius; dz <= radius && sentThisTick < maxChunksPerTick; ++dz)
             {
                 glm::ivec2 key(cx + dx, cz + dz);
                 if (sent.count(key)) continue;
@@ -98,6 +126,7 @@ void HostedServer::StreamChunks()
                 netServer.SendTo(peerId, buf, true);
 
                 sent.insert(key);
+                ++sentThisTick;
             }
         }
     }

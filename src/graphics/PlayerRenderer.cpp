@@ -6,6 +6,7 @@
 #include "game/GameConfig.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <imgui.h>
 
 static Mesh CreateBoxMesh(float w, float h, float d, float r, float g, float b)
 {
@@ -75,5 +76,42 @@ void PlayerRenderer::Render(const Renderer& renderer, const Shader& shader,
         glm::mat4 headModel = glm::translate(glm::mat4(1.0f),
             pos + glm::vec3(0.0f, 1.4f, 0.0f));
         renderer.Draw(*headMesh, shader, camera, headModel, aspectRatio);
+    }
+}
+
+void PlayerRenderer::RenderNameTags(const Camera& camera, float aspectRatio,
+                                    const std::vector<PlayerSnapshot>& players,
+                                    int localPlayerId)
+{
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 proj = camera.GetProjectionMatrix(aspectRatio);
+    ImGuiIO& io = ImGui::GetIO();
+    ImDrawList* draw = ImGui::GetForegroundDrawList();
+
+    for (const auto& snap : players)
+    {
+        if (snap.playerId == localPlayerId || snap.username.empty())
+            continue;
+
+        glm::vec3 tagPos = snap.position + glm::vec3(0.0f, 1.9f, 0.0f);
+        glm::vec4 clip = proj * view * glm::vec4(tagPos, 1.0f);
+
+        if (clip.w <= 0.0f)
+            continue;
+
+        glm::vec3 ndc = glm::vec3(clip) / clip.w;
+
+        float screenX = (ndc.x * 0.5f + 0.5f) * io.DisplaySize.x;
+        float screenY = (1.0f - (ndc.y * 0.5f + 0.5f)) * io.DisplaySize.y;
+
+        ImVec2 textSize = ImGui::CalcTextSize(snap.username.c_str());
+        ImVec2 textPos(screenX - textSize.x * 0.5f, screenY - textSize.y);
+
+        draw->AddRectFilled(
+            ImVec2(textPos.x - 3, textPos.y - 1),
+            ImVec2(textPos.x + textSize.x + 3, textPos.y + textSize.y + 1),
+            IM_COL32(0, 0, 0, 140), 2.0f);
+
+        draw->AddText(textPos, IM_COL32(255, 255, 255, 240), snap.username.c_str());
     }
 }

@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 #include "physics/AABB.h"
 #include "world/Chunk.h"
@@ -33,6 +34,10 @@ public:
     bool IsChunkDirty(const glm::ivec2& key) const;
     void ClearChunkDirty(const glm::ivec2& key);
 
+    struct BlockChangeRecord { glm::ivec3 pos; BlockType type; };
+    const std::vector<BlockChangeRecord>& GetBlockChanges() const;
+    void ClearBlockChanges();
+
 private:
     void LoadChunk(int chunkX, int chunkZ);
     std::string ChunkFilePath(int chunkX, int chunkZ) const;
@@ -45,4 +50,5 @@ private:
 
     std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, ChunkKeyHash> chunks;
     std::unordered_map<glm::ivec2, bool, ChunkKeyHash> dirtyChunks;
+    std::vector<BlockChangeRecord> blockChanges;
 };

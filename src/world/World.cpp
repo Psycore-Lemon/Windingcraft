@@ -161,8 +161,19 @@ bool World::SetBlock(const glm::vec3& worldPos, BlockType type)
 
     it->second->SetBlock(lx, b.y, lz, type);
     dirtyChunks[key] = true;
+    blockChanges.push_back({b, type});
 
     return true;
+}
+
+const std::vector<World::BlockChangeRecord>& World::GetBlockChanges() const
+{
+    return blockChanges;
+}
+
+void World::ClearBlockChanges()
+{
+    blockChanges.clear();
 }
 
 glm::ivec2 World::WorldToChunk(const glm::vec3& position) const
