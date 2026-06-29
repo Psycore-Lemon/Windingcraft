@@ -81,6 +81,8 @@ set(GRAPHICS_SOURCES
     src/graphics/PrimitiveMeshes.h
     src/graphics/Renderer.cpp
     src/graphics/Renderer.h
+    src/graphics/Texture.cpp
+    src/graphics/Texture.h
     src/graphics/WorldRenderer.cpp
     src/graphics/WorldRenderer.h
 )
@@ -97,6 +99,7 @@ set(SCENE_SOURCES
     src/scene/PlayerController.cpp
     src/scene/PlayerController.h
     src/scene/PlayerStatus.h
+    src/scene/Transform.h
 )
 
 set(UI_SOURCES
@@ -151,6 +154,7 @@ add_executable(Windingcraft
 target_include_directories(Windingcraft PRIVATE
     src
     dependencies/fastnoiselite
+    dependencies/stb
 )
 
 # -------------------------
