@@ -65,7 +65,13 @@ void Player::ProcessCommand(const PlayerCommand& cmd, float dt, World& world)
         if (selected != BlockType::Air)
         {
             glm::vec3 placePos = glm::vec3(lookingAtBlockPos) + glm::vec3(lookingAtNormal);
-            world.SetBlock(placePos, selected);
+
+            AABB blockAABB;
+            blockAABB.min = placePos;
+            blockAABB.max = placePos + glm::vec3(1.0f);
+
+            if (!GetBoundingBox().Overlaps(blockAABB))
+                world.SetBlock(placePos, selected);
         }
     }
     secondaryWasDown = cmd.secondaryAction;

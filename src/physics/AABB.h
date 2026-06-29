@@ -56,8 +56,9 @@ struct AABB
             overlaps[i] = std::min(d1, d2);
         }
 
-        if (overlaps[axis] > overlaps[(axis + 1) % 3] ||
-            overlaps[axis] > overlaps[(axis + 2) % 3])
+        constexpr float epsilon = 0.001f;
+        if (overlaps[axis] > overlaps[(axis + 1) % 3] + epsilon ||
+            overlaps[axis] > overlaps[(axis + 2) % 3] + epsilon)
             return glm::vec3(0.0f);
 
         float d1 = other.max[axis] - min[axis];
