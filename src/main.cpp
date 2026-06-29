@@ -18,7 +18,9 @@ static void SignalHandler(int) { running = false; }
 static int RunDedicatedServer(const std::string& worldName, int seed, uint16_t port)
 {
     std::signal(SIGINT, SignalHandler);
+#ifdef SIGTERM
     std::signal(SIGTERM, SignalHandler);
+#endif
 
     SaveData saveData;
     bool existing = SaveManager::Load(worldName, saveData);

@@ -190,6 +190,10 @@ target_include_directories(Windingcraft PRIVATE
     dependencies/enet/include
 )
 
+if(WIN32)
+    target_compile_definitions(Windingcraft PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
+
 # -------------------------
 # Link Libraries
 # -------------------------
