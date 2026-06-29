@@ -51,6 +51,5 @@ private:
     bool firstMouseUpdate = true;
 
     float scrollDelta = 0.0f;
-    static InputHandler* scrollInstance;
     static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 };

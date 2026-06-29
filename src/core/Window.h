@@ -18,6 +18,7 @@ public:
     void Close();
 
     GLFWwindow* GetHandle() const;
+    void SetUserPointer(void* ptr);
     float GetAspectRatio() const;
     void SetCursorCaptured(bool captured);
     void SetSize(int width, int height);

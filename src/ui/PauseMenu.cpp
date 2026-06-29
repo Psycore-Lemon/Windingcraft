@@ -1,72 +1,68 @@
 #include "ui/PauseMenu.h"
+#include "ui/UIHelpers.h"
 #include "ui/VideoSettings.h"
 
 #include <imgui.h>
 
+using namespace UIHelpers;
+
 static const ImVec2 ButtonSize(200, 40);
-
-static ImGuiWindowFlags CenteredWindowFlags()
-{
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
-                            ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowBgAlpha(0.85f);
-
-    return ImGuiWindowFlags_NoDecoration
-         | ImGuiWindowFlags_AlwaysAutoResize
-         | ImGuiWindowFlags_NoMove;
-}
+static const ImVec2 PauseSize(240, 320);
+static const ImVec2 OptionsSize(350, 350);
 
 PauseMenu::Action PauseMenu::Render(Window& window, Config& config, const std::string& configPath)
 {
     Action action = Action::None;
-    ImGuiWindowFlags flags = CenteredWindowFlags();
 
     if (currentPage == Page::Main)
     {
-        if (ImGui::Begin("Pause", nullptr, flags))
-        {
-            ImGui::Text("PAUSED");
-            ImGui::Separator();
-            ImGui::Spacing();
+        BeginCenteredWindow("Pause", PauseSize, 0.85f);
 
-            if (ImGui::Button("Resume", ButtonSize))
-                action = Action::Resume;
+        ImGui::Spacing();
+        CenteredText("PAUSED");
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
 
-            ImGui::Spacing();
+        if (CenteredButton("Resume", ButtonSize))
+            action = Action::Resume;
 
-            if (ImGui::Button("Options", ButtonSize))
-                currentPage = Page::Options;
+        ImGui::Spacing();
 
-            ImGui::Spacing();
+        if (CenteredButton("Options", ButtonSize))
+            currentPage = Page::Options;
 
-            if (ImGui::Button("Quit to Menu", ButtonSize))
-                action = Action::QuitToMenu;
+        ImGui::Spacing();
 
-            ImGui::Spacing();
+        if (CenteredButton("Quit to Menu", ButtonSize))
+            action = Action::QuitToMenu;
 
-            if (ImGui::Button("Quit to Desktop", ButtonSize))
-                action = Action::QuitToDesktop;
-        }
+        ImGui::Spacing();
+
+        if (CenteredButton("Quit to Desktop", ButtonSize))
+            action = Action::QuitToDesktop;
+
         ImGui::End();
     }
     else if (currentPage == Page::Options)
     {
-        if (ImGui::Begin("Options", nullptr, flags))
-        {
-            ImGui::Text("OPTIONS");
-            ImGui::Separator();
-            ImGui::Spacing();
+        BeginCenteredWindow("Options", OptionsSize);
 
-            VideoSettings::Render(window, config, configPath);
+        ImGui::Spacing();
+        CenteredText("OPTIONS");
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
 
-            ImGui::Spacing();
-            ImGui::Separator();
-            ImGui::Spacing();
+        VideoSettings::Render(window, config, configPath);
 
-            if (ImGui::Button("Back", ButtonSize))
-                currentPage = Page::Main;
-        }
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        if (CenteredButton("Back", ButtonSize))
+            currentPage = Page::Main;
+
         ImGui::End();
     }
 

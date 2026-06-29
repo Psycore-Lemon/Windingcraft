@@ -16,16 +16,18 @@ bool Engine::Init(const std::string& path)
 {
     configPath = path;
 
-    Config* loaded = ReadConfig(configPath);
-    config = *loaded;
-    delete loaded;
+    config = ReadConfig(configPath);
 
     if (!window.Init(config.windowWidth, config.windowHeight, "Windingcraft", config.fullscreen))
         return false;
 
-    controller.AttachToWindow(window.GetHandle());
+    callbackData.camera = &controller.GetCamera();
+    window.SetUserPointer(&callbackData);
 
     input = std::make_unique<InputHandler>(window.GetHandle());
+    callbackData.input = input.get();
+
+    controller.AttachToWindow(window.GetHandle());
     shader = std::make_unique<Shader>("shaders/vertex-shader.glsl", "shaders/fragment-shader.glsl");
     lineShader = std::make_unique<Shader>("shaders/line-vertex.glsl", "shaders/line-fragment.glsl");
     renderer = std::make_unique<Renderer>(window.GetHandle());

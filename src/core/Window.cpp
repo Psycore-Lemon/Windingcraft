@@ -81,6 +81,11 @@ GLFWwindow* Window::GetHandle() const
     return handle;
 }
 
+void Window::SetUserPointer(void* ptr)
+{
+    glfwSetWindowUserPointer(handle, ptr);
+}
+
 float Window::GetAspectRatio() const
 {
     int w, h;

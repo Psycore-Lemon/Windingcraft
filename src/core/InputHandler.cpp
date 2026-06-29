@@ -1,4 +1,5 @@
 #include "InputHandler.h"
+#include "core/CallbackData.h"
 #include <GLFW/glfw3.h>
 
 InputHandler::InputHandler(GLFWwindow* window)
@@ -19,16 +20,14 @@ InputHandler::InputHandler(GLFWwindow* window)
     currentMousePosition = glm::vec2(x, y);
     lastMousePosition = currentMousePosition;
 
-    scrollInstance = this;
     glfwSetScrollCallback(window, ScrollCallback);
 }
 
-InputHandler* InputHandler::scrollInstance = nullptr;
-
 void InputHandler::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    if (scrollInstance)
-        scrollInstance->scrollDelta += (float)yoffset;
+    auto* data = static_cast<CallbackData*>(glfwGetWindowUserPointer(window));
+    if (data && data->input)
+        data->input->scrollDelta += (float)yoffset;
 }
 
 void InputHandler::Update()

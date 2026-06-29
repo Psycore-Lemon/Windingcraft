@@ -1,10 +1,13 @@
 #include "ui/MainMenu.h"
+#include "ui/UIHelpers.h"
 #include "ui/VideoSettings.h"
 
 #include <imgui.h>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+
+using namespace UIHelpers;
 
 static const ImVec2 ButtonSize(280, 40);
 static const ImVec2 MenuSize(320, 300);
@@ -16,34 +19,6 @@ static int HashString(const char* str)
     for (const char* c = str; *c; ++c)
         hash = hash * 31 + (unsigned char)*c;
     return (int)hash;
-}
-
-static void BeginCenteredWindow(const char* name, const ImVec2& size, ImGuiWindowFlags extraFlags = 0)
-{
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f),
-                            ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(size);
-    ImGui::SetNextWindowBgAlpha(0.9f);
-
-    ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration
-                           | ImGuiWindowFlags_NoMove
-                           | extraFlags;
-
-    ImGui::Begin(name, nullptr, flags);
-}
-
-static void CenteredText(const char* text)
-{
-    float width = ImGui::CalcTextSize(text).x;
-    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - width) * 0.5f);
-    ImGui::Text("%s", text);
-}
-
-static bool CenteredButton(const char* label, const ImVec2& size)
-{
-    ImGui::SetCursorPosX((ImGui::GetWindowWidth() - size.x) * 0.5f);
-    return ImGui::Button(label, size);
 }
 
 void MainMenu::RefreshSaveList()

@@ -7,6 +7,7 @@
 #include "core/Time.h"
 #include "core/InputHandler.h"
 #include "core/Config.h"
+#include "core/CallbackData.h"
 
 #include "game/SaveData.h"
 #include "scene/PlayerController.h"
@@ -57,5 +58,6 @@ private:
     std::unique_ptr<WorldRenderer> worldRenderer;
     std::unique_ptr<UIManager> ui;
 
+    CallbackData callbackData;
     bool escWasDown = false;
 };

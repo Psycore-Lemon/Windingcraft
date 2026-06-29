@@ -50,6 +50,7 @@ target_link_libraries(imgui PUBLIC glfw glad)
 # -------------------------
 
 set(CORE_SOURCES
+    src/core/CallbackData.h
     src/core/Config.cpp
     src/core/Config.h
     src/core/Engine.cpp
@@ -109,6 +110,7 @@ set(UI_SOURCES
     src/ui/MainMenu.h
     src/ui/PauseMenu.cpp
     src/ui/PauseMenu.h
+    src/ui/UIHelpers.h
     src/ui/VideoSettings.cpp
     src/ui/VideoSettings.h
 )

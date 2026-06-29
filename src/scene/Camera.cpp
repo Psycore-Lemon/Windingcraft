@@ -1,4 +1,5 @@
 #include "scene/Camera.h"
+#include "core/CallbackData.h"
 #include "game/GameConfig.h"
 #include <GLFW/glfw3.h>
 
@@ -15,13 +16,14 @@ Camera::Camera()
 
 void Camera::AttachToWindow(GLFWwindow* window)
 {
-    glfwSetWindowUserPointer(window, this);
     glfwSetCursorPosCallback(window, MouseCallback);
 }
 
 void Camera::MouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
-    auto* cam = static_cast<Camera*>(glfwGetWindowUserPointer(window));
+    auto* data = static_cast<CallbackData*>(glfwGetWindowUserPointer(window));
+    if (!data || !data->camera) return;
+    auto* cam = data->camera;
 
     if (!cam->active)
     {

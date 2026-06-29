@@ -30,7 +30,7 @@ void VideoSettings::Render(Window& window, Config& config, const std::string& co
             config.windowWidth = res.w;
             config.windowHeight = res.h;
             config.fullscreen = false;
-            WriteConfig(configPath, &config);
+            WriteConfig(configPath, config);
         }
     }
 
@@ -41,6 +41,6 @@ void VideoSettings::Render(Window& window, Config& config, const std::string& co
     {
         window.SetFullscreen(fullscreen);
         config.fullscreen = fullscreen;
-        WriteConfig(configPath, &config);
+        WriteConfig(configPath, config);
     }
 }
