@@ -8,21 +8,13 @@
 #include "core/InputHandler.h"
 #include "core/Config.h"
 
-#include "game/BlockType.h"
 #include "game/SaveData.h"
-
-#include "scene/Camera.h"
-#include "scene/Player.h"
+#include "scene/PlayerController.h"
 #include "world/World.h"
 
 class Shader;
-class Mesh;
 class Renderer;
-
 class UIManager;
-class HUD;
-class MainMenu;
-class PauseMenu;
 
 class Engine
 {
@@ -43,6 +35,8 @@ private:
     void Update(float dt);
     void Render();
     void SetState(State newState);
+    void StartWorld(const SaveData& data);
+    void SaveWorld();
 
     State state = State::Menu;
 
@@ -50,12 +44,9 @@ private:
     Config config;
     std::string configPath;
 
-    Camera camera;
-    Player player;
+    PlayerController controller;
     std::unique_ptr<World> world;
     SaveData currentSave;
-    void StartWorld(const SaveData& data);
-    void SaveWorld();
 
     Time time;
     std::unique_ptr<InputHandler> input;
@@ -63,15 +54,6 @@ private:
     std::unique_ptr<Shader> lineShader;
     std::unique_ptr<Renderer> renderer;
     std::unique_ptr<UIManager> ui;
-    std::unique_ptr<HUD> hud;
-    std::unique_ptr<MainMenu> mainMenu;
-    std::unique_ptr<PauseMenu> pauseMenu;
 
     bool escWasDown = false;
-    bool breakWasDown = false;
-
-    BlockType lookingAtBlock = BlockType::Air;
-    glm::ivec3 lookingAtBlockPos = glm::ivec3(0);
-    bool hasTarget = false;
-    void UpdateLookTarget();
 };

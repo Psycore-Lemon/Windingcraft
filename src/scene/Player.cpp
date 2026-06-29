@@ -10,6 +10,8 @@ Player::Player(const glm::vec3& spawnPosition)
 
 void Player::ProcessInput(const InputHandler& input, const Camera& camera, float dt)
 {
+    timeSinceStart += dt;
+
     glm::vec3 front = camera.GetFront();
     glm::vec3 forward = glm::normalize(glm::vec3(front.x, 0.0f, front.z));
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -24,21 +26,44 @@ void Player::ProcessInput(const InputHandler& input, const Camera& camera, float
     if (glm::length(move) > 0.0f)
         move = glm::normalize(move);
 
-    velocity.x = move.x * moveSpeed;
-    velocity.z = move.z * moveSpeed;
+    float speed = flying ? flySpeed : moveSpeed;
+    velocity.x = move.x * speed;
+    velocity.z = move.z * speed;
 
-    if (input.IsActionDown(Action::Jump) && grounded)
+    bool jumpDown = input.IsActionDown(Action::Jump);
+
+    if (jumpDown && !jumpWasDown)
     {
-        velocity.y = jumpForce;
-        grounded = false;
+        if (timeSinceStart - lastJumpTime < doubleTapWindow)
+            flying = !flying;
+
+        lastJumpTime = timeSinceStart;
+
+        if (!flying && grounded)
+        {
+            velocity.y = jumpForce;
+            grounded = false;
+        }
+    }
+    jumpWasDown = jumpDown;
+
+    if (flying)
+    {
+        velocity.y = 0.0f;
+
+        if (input.IsActionDown(Action::Jump))
+            velocity.y = flySpeed;
+
+        if (input.IsActionDown(Action::Descend))
+            velocity.y = -flySpeed;
     }
 }
 
 void Player::Update(float dt, const World& world)
 {
-    velocity.y -= gravity * dt;
+    if (!flying)
+        velocity.y -= gravity * dt;
 
-    // Resolve each axis independently to prevent clipping
     position.y += velocity.y * dt;
     ResolveCollisions(world, 1);
 
@@ -57,6 +82,11 @@ void Player::UpdateCamera(Camera& camera) const
 bool Player::IsGrounded() const
 {
     return grounded;
+}
+
+bool Player::IsFlying() const
+{
+    return flying;
 }
 
 AABB Player::GetBoundingBox() const

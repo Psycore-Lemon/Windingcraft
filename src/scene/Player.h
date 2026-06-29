@@ -19,6 +19,7 @@ public:
     void UpdateCamera(Camera& camera) const;
 
     bool IsGrounded() const;
+    bool IsFlying() const;
 
     glm::vec3 position;
 
@@ -37,4 +38,11 @@ private:
     glm::vec3 halfExtents = glm::vec3(0.3f, 0.9f, 0.3f);
 
     bool grounded = false;
+    bool flying = false;
+    float flySpeed = 10.0f;
+
+    bool jumpWasDown = false;
+    float lastJumpTime = 0.0f;
+    float doubleTapWindow = 0.3f;
+    float timeSinceStart = 0.0f;
 };

@@ -13,6 +13,7 @@ enum class Action
     MoveRight,
 
     Jump,
+    Descend,
 
     BreakBlock,
     PlaceBlock,
@@ -30,11 +31,12 @@ public:
     bool IsActionDown(Action action) const;
     bool IsKeyDown(int key) const;
 
-    bool IsMouseButtonDown(int button);
+    bool IsMouseButtonDown(int button) const;
 
     glm::vec2 GetMousePosition() const;
 
     glm::vec2 GetMouseDelta() const;
+    float GetScrollDelta() const;
 
     void Update();
 
@@ -47,4 +49,8 @@ private:
     glm::vec2 mouseDelta = glm::vec2(0.0f);
 
     bool firstMouseUpdate = true;
+
+    float scrollDelta = 0.0f;
+    static InputHandler* scrollInstance;
+    static void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 };

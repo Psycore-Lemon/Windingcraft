@@ -9,6 +9,7 @@ InputHandler::InputHandler(GLFWwindow* window)
     BindKey(Action::MoveLeft,     GLFW_KEY_A);
     BindKey(Action::MoveRight,    GLFW_KEY_D);
     BindKey(Action::Jump,         GLFW_KEY_SPACE);
+    BindKey(Action::Descend,      GLFW_KEY_LEFT_SHIFT);
     BindKey(Action::Pause,        GLFW_KEY_ESCAPE);
 
     double x;
@@ -17,10 +18,22 @@ InputHandler::InputHandler(GLFWwindow* window)
 
     currentMousePosition = glm::vec2(x, y);
     lastMousePosition = currentMousePosition;
+
+    scrollInstance = this;
+    glfwSetScrollCallback(window, ScrollCallback);
+}
+
+InputHandler* InputHandler::scrollInstance = nullptr;
+
+void InputHandler::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if (scrollInstance)
+        scrollInstance->scrollDelta += (float)yoffset;
 }
 
 void InputHandler::Update()
 {
+    scrollDelta = 0.0f;
     glfwPollEvents();
 
     double x;
@@ -65,7 +78,7 @@ bool InputHandler::IsActionDown(Action action) const
     return IsKeyDown(key);
 }
 
-bool InputHandler::IsMouseButtonDown(int button)
+bool InputHandler::IsMouseButtonDown(int button) const
 {
     return glfwGetMouseButton(window, button) == GLFW_PRESS;
 }
@@ -78,4 +91,9 @@ glm::vec2 InputHandler::GetMousePosition() const
 glm::vec2 InputHandler::GetMouseDelta() const
 {
     return mouseDelta;
+}
+
+float InputHandler::GetScrollDelta() const
+{
+    return scrollDelta;
 }

@@ -5,7 +5,7 @@
 class HUD
 {
 public:
-    void RenderOverlay(const glm::vec3& playerPos, bool grounded, int chunkCount,
-                       const char* lookingAt);
+    void RenderOverlay(const glm::vec3& playerPos, bool grounded, bool flying,
+                       int chunkCount, const char* lookingAt);
     void RenderCrosshair();
 };

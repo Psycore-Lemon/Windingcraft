@@ -1,4 +1,6 @@
 #include "ui/UIManager.h"
+#include "scene/PlayerStatus.h"
+#include "game/Inventory.h"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -49,3 +51,32 @@ void UIManager::EndFrame()
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
+
+MainMenu::Action UIManager::RenderMainMenu(Window& window, Config& config, const std::string& configPath)
+{
+    return mainMenu.Render(window, config, configPath);
+}
+
+PauseMenu::Action UIManager::RenderPaused(Window& window, Config& config, const std::string& configPath,
+                                           const PlayerStatus& status, const Inventory& inventory, int chunkCount)
+{
+    const char* lookName = status.hasTarget
+        ? Blocks::Get(status.lookingAtBlock).name : "---";
+
+    hud.RenderOverlay(status.position, status.grounded, status.flying, chunkCount, lookName);
+
+    return pauseMenu.Render(window, config, configPath);
+}
+
+void UIManager::RenderPlaying(const PlayerStatus& status, const Inventory& inventory, int chunkCount)
+{
+    const char* lookName = status.hasTarget
+        ? Blocks::Get(status.lookingAtBlock).name : "---";
+
+    hud.RenderOverlay(status.position, status.grounded, status.flying, chunkCount, lookName);
+    hud.RenderCrosshair();
+    hotbar.Render(inventory);
+}
+
+MainMenu& UIManager::GetMainMenu() { return mainMenu; }
+PauseMenu& UIManager::GetPauseMenu() { return pauseMenu; }

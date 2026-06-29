@@ -64,6 +64,8 @@ set(CORE_SOURCES
 
 set(GAME_SOURCES
     src/game/BlockType.h
+    src/game/Inventory.cpp
+    src/game/Inventory.h
     src/game/SaveData.cpp
     src/game/SaveData.h
 )
@@ -88,6 +90,9 @@ set(SCENE_SOURCES
     src/scene/Camera.h
     src/scene/Player.cpp
     src/scene/Player.h
+    src/scene/PlayerController.cpp
+    src/scene/PlayerController.h
+    src/scene/PlayerStatus.h
 )
 
 set(UI_SOURCES
@@ -95,6 +100,8 @@ set(UI_SOURCES
     src/ui/UIManager.h
     src/ui/HUD.cpp
     src/ui/HUD.h
+    src/ui/Hotbar.cpp
+    src/ui/Hotbar.h
     src/ui/MainMenu.cpp
     src/ui/MainMenu.h
     src/ui/PauseMenu.cpp

@@ -2,23 +2,12 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <cmath>
 
-#include "game/BlockType.h"
 #include "graphics/Shader.h"
-#include "graphics/Mesh.h"
 #include "graphics/Renderer.h"
-
 #include "ui/UIManager.h"
-#include "ui/HUD.h"
-#include "ui/MainMenu.h"
-#include "ui/PauseMenu.h"
 
-Engine::Engine()
-    : player(glm::vec3(0.0f, 20.0f, 0.0f))
-{
-}
-
+Engine::Engine() = default;
 Engine::~Engine() = default;
 
 bool Engine::Init(const std::string& path)
@@ -32,7 +21,7 @@ bool Engine::Init(const std::string& path)
     if (!window.Init(config.windowWidth, config.windowHeight, "Windingcraft", config.fullscreen))
         return false;
 
-    camera.AttachToWindow(window.GetHandle());
+    controller.AttachToWindow(window.GetHandle());
 
     input = std::make_unique<InputHandler>(window.GetHandle());
     shader = std::make_unique<Shader>("shaders/vertex-shader.glsl", "shaders/fragment-shader.glsl");
@@ -41,9 +30,6 @@ bool Engine::Init(const std::string& path)
 
     ui = std::make_unique<UIManager>();
     ui->Init(window.GetHandle());
-    hud = std::make_unique<HUD>();
-    mainMenu = std::make_unique<MainMenu>();
-    pauseMenu = std::make_unique<PauseMenu>();
 
     SetState(State::Menu);
 
@@ -81,14 +67,7 @@ void Engine::ProcessInput(float dt)
     escWasDown = escDown;
 
     if (state == State::Playing)
-    {
-        player.ProcessInput(*input, camera, dt);
-
-        bool breakDown = input->IsMouseButtonDown(0);
-        if (breakDown && !breakWasDown && hasTarget)
-            world->SetBlock(glm::vec3(lookingAtBlockPos), BlockType::Air);
-        breakWasDown = breakDown;
-    }
+        controller.ProcessInput(*input, *world, dt);
 }
 
 void Engine::SetState(State newState)
@@ -97,27 +76,27 @@ void Engine::SetState(State newState)
 
     bool captured = (state == State::Playing);
     window.SetCursorCaptured(captured);
-    camera.SetActive(captured);
+    controller.GetCamera().SetActive(captured);
 
     if (state == State::Playing)
-        pauseMenu->Reset();
+        ui->GetPauseMenu().Reset();
 }
 
 void Engine::StartWorld(const SaveData& data)
 {
     currentSave = data;
-    player = Player(data.playerPosition);
+    controller.Reset(data.playerPosition);
     world = std::make_unique<World>(data.seed);
 
     std::string worldDir = SaveManager::SaveDir() + "/" + data.name;
     world->SetSaveDir(worldDir);
 
-    world->Update(player.position);
+    world->Update(controller.GetPlayer().position);
 }
 
 void Engine::SaveWorld()
 {
-    currentSave.playerPosition = player.position;
+    currentSave.playerPosition = controller.GetPlayer().position;
     SaveManager::Save(currentSave.name, currentSave);
     world->SaveAll();
 }
@@ -127,42 +106,7 @@ void Engine::Update(float dt)
     if (state != State::Playing)
         return;
 
-    float clampedDt = (dt > 0.05f) ? 0.05f : dt;
-
-    world->Update(player.position);
-    player.Update(clampedDt, *world);
-    player.UpdateCamera(camera);
-    UpdateLookTarget();
-}
-
-void Engine::UpdateLookTarget()
-{
-    hasTarget = false;
-    lookingAtBlock = BlockType::Air;
-
-    if (!world)
-        return;
-
-    glm::vec3 pos = camera.position;
-    glm::vec3 dir = camera.GetFront();
-
-    for (float t = 0.0f; t < 6.0f; t += 0.05f)
-    {
-        glm::vec3 point = pos + dir * t;
-        BlockType type = world->GetBlock(point);
-
-        if (Blocks::IsSolid(type))
-        {
-            hasTarget = true;
-            lookingAtBlock = type;
-            lookingAtBlockPos = glm::ivec3(
-                (int)std::floor(point.x),
-                (int)std::floor(point.y),
-                (int)std::floor(point.z)
-            );
-            return;
-        }
-    }
+    controller.Update(dt, *world);
 }
 
 void Engine::Render()
@@ -171,29 +115,32 @@ void Engine::Render()
 
     if (state != State::Menu && world)
     {
+        const Camera& cam = controller.GetCamera();
         float aspectRatio = window.GetAspectRatio();
         glm::mat4 identity(1.0f);
 
         for (const auto& [key, data] : world->GetChunks())
         {
             if (data.mesh)
-                renderer->Draw(*data.mesh, *shader, camera, identity, aspectRatio);
+                renderer->Draw(*data.mesh, *shader, cam, identity, aspectRatio);
         }
 
-        if (hasTarget)
-            renderer->DrawBlockHighlight(*lineShader, camera, lookingAtBlockPos, aspectRatio);
+        if (controller.HasTarget())
+            renderer->DrawBlockHighlight(*lineShader, cam, controller.GetLookingAtPos(), aspectRatio);
     }
 
+    int chunkCount = world ? (int)world->GetChunks().size() : 0;
+    PlayerStatus status = controller.GetStatus();
     bool interactive = (state != State::Playing);
     ui->BeginFrame(interactive);
 
     if (state == State::Menu)
     {
-        auto action = mainMenu->Render(window, config, configPath);
+        auto action = ui->RenderMainMenu(window, config, configPath);
 
         if (action == MainMenu::Action::Play)
         {
-            StartWorld(mainMenu->GetWorldData());
+            StartWorld(ui->GetMainMenu().GetWorldData());
             SetState(State::Playing);
         }
         else if (action == MainMenu::Action::Quit)
@@ -203,10 +150,7 @@ void Engine::Render()
     }
     else if (state == State::Paused)
     {
-        hud->RenderOverlay(player.position, player.IsGrounded(), (int)world->GetChunks().size(),
-                           hasTarget ? Blocks::Get(lookingAtBlock).name : "---");
-
-        auto action = pauseMenu->Render(window, config, configPath);
+        auto action = ui->RenderPaused(window, config, configPath, status, controller.GetInventory(), chunkCount);
 
         if (action == PauseMenu::Action::Resume)
             SetState(State::Playing);
@@ -223,9 +167,7 @@ void Engine::Render()
     }
     else
     {
-        hud->RenderOverlay(player.position, player.IsGrounded(), (int)world->GetChunks().size(),
-                           hasTarget ? Blocks::Get(lookingAtBlock).name : "---");
-        hud->RenderCrosshair();
+        ui->RenderPlaying(status, controller.GetInventory(), chunkCount);
     }
 
     ui->EndFrame();
